@@ -1,0 +1,37 @@
+Processing: hrcf26111_000N001_evt1.fits : HRC-I
+Processing: hrcf23366_000N001_evt1.fits : HRC-S
+Processing: hrcf23367_000N001_evt1.fits : HRC-S
+Processing: hrcf24546_000N001_evt1.fits : HRC-I
+Processing: hrcf24547_000N001_evt1.fits : HRC-I
+Processing: hrcf24548_000N001_evt1.fits : HRC-I
+Processing: hrcf24549_000N001_evt1.fits : HRC-I
+Processing: hrcf24550_000N001_evt1.fits : HRC-I
+Processing: hrcf24551_000N001_evt1.fits : HRC-I
+Processing: hrcf24552_000N001_evt1.fits : HRC-I
+Processing: hrcf24553_000N001_evt1.fits : HRC-I
+Processing: hrcf24554_000N001_evt1.fits : HRC-I
+Processing: hrcf24555_000N001_evt1.fits : HRC-I
+Processing: hrcf24556_000N001_evt1.fits : HRC-I
+Processing: hrcf24557_000N001_evt1.fits : HRC-I
+Processing: hrcf24558_000N001_evt1.fits : HRC-I
+Processing: hrcf24559_000N001_evt1.fits : HRC-I
+Processing: hrcf24560_000N001_evt1.fits : HRC-I
+Processing: hrcf24561_000N001_evt1.fits : HRC-I
+Processing: hrcf24562_000N001_evt1.fits : HRC-I
+Processing: hrcf24563_000N001_evt1.fits : HRC-I
+Processing: hrcf24564_000N001_evt1.fits : HRC-I
+Processing: hrcf24565_000N001_evt1.fits : HRC-I
+Processing: hrcf24566_000N001_evt1.fits : HRC-I
+Processing: hrcf24349_000N001_evt1.fits : HRC-S
+Processing: hrcf26121_000N001_evt1.fits : HRC-S
+Processing: hrcf23369_000N001_evt1.fits : HRC-I
+Processing: hrcf23391_000N001_evt1.fits : HRC-S
+Processing: hrcf23470_000N001_evt1.fits : HRC-I
+Processing: hrcf25592_001N001_evt1.fits : HRC-S
+Processing: hrcf23388_000N001_evt1.fits : HRC-I
+Traceback (most recent call last):
+  File "/data/aschrc6/wilton/isobe/Project11/Scripts/hrc_dose_create_run.py", line 129, in <module>
+    hrc_dose_create_run(year, month)
+  File "/data/aschrc6/wilton/isobe/Project11/Scripts/hrc_dose_create_run.py", line 84, in hrc_dose_create_run
+    hdci.hrc_dose_create_image(year, month)
+AttributeError: module 'hrc_dose_create_image' has no attribute 'hrc_dose_create_image'
