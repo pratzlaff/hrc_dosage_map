@@ -12,7 +12,6 @@ mkdir -p $wwwdir/{Image,Plots}/HRC{I,S}/{Cumulative,Month}
 mkdir -p $outdir/{i,s}/Exposure_map/{Data,Image}/{Cumulative,Month}
 mkdir -p $outdir/{i,s}/Exposure_map/Stats
 
-
 export SKA=/proj/sot/ska
 export PYTHONPATH=/data/mta/Script/Python3.8/envs/ska3-shiny/lib/python3.8/site-packages:/data/mta/Script/Python3.8/lib/python3.8/site-packages/
 

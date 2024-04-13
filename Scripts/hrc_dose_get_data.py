@@ -13,12 +13,18 @@
 #                                                                                       #
 #########################################################################################
 
-import sys
-import os
-import string
-import re
-import numpy
 import astropy.io.fits  as pyfits
+import glob
+import numpy
+import os
+import re
+import shutil
+import string
+import sys
+import time
+
+import HRCExp
+
 #
 #--- from ska
 #
@@ -41,16 +47,9 @@ for ent in data:
 #--- append path to a private folder
 #
 sys.path.append(bin_dir)
-sys.path.append(mta_dir)
+
 #
-#--- converTimeFormat contains MTA time conversion routines
-#
-#
-#---- mta common functions
-#
-import mta_common_functions as mcf
-#
-#--- setting sections for subdeviding image
+#--- setting sections for subdividing image
 #
 #---for HRC S
 #
@@ -155,9 +154,9 @@ def hrc_dose_get_data(year, month):
     cmd2 =  ' /proj/sot/ska/bin/arc5gl -user rpete -script ./zspace > ./zout'
     cmd  = cmd1 + cmd2
     os.system(cmd2)
-    mcf.rm_files('./zspace')
+    #os.unlink('./zspace')
 
-    fitsList = mcf.read_data_file('./zout', remove=1)
+    fitsList = HRCExp.read_data_file('./zout', remove=1)
 #
 #--- extract each evt1 file, extract the central part, and combine them into a one file
 #
@@ -176,23 +175,34 @@ def hrc_dose_get_data(year, month):
         try:
             atemp = re.split('\s+', line)
             fitsName  = atemp[0]
-            line = 'operation=retrieve\n'
-            line = line + 'dataset=flight\n'
-            line = line + 'detector=hrc\n'
-            line = line + 'level=1\n'
-            line = line + 'filetype=evt1\n'
-            line = line + 'filename=' + fitsName + '\n'
-            line = line + 'go\n'
-            f    = open('./zspace', 'w')
-            f.write(line)
-            f.close()
-            cmd1 = "/usr/bin/env PERL5LIB="
-            cmd2 =  ' /proj/sot/ska/bin/arc5gl -user rpete -script ./zspace > ./zout'
-            cmd  = cmd1 + cmd2
-            os.system(cmd2)
-            mcf.rm_files('./zspace')
 
-            cmd = 'gzip -d ' + fitsName + '.gz'
+            fn = find_local_evt1(fitsName)
+            if (fn):
+                shutil.copyfile(fn, './'+re.search('hrcf.*',fn)[0])
+                sys.stderr.write(f'Using {fn}\n')
+
+                # might locally have an earlier iteration than is in
+                # the archive, which is fine
+                fitsName = re.search('hrcf.*evt1.fits', fn)[0]
+            else:
+                sys.stderr.write(f'Retrieving {fitsName} from archive\n')
+                line = 'operation=retrieve\n'
+                line = line + 'dataset=flight\n'
+                line = line + 'detector=hrc\n'
+                line = line + 'level=1\n'
+                line = line + 'filetype=evt1\n'
+                line = line + 'filename=' + fitsName + '\n'
+                line = line + 'go\n'
+                f    = open('./zspace', 'w')
+                f.write(line)
+                f.close()
+                cmd1 = "/usr/bin/env PERL5LIB="
+                cmd2 =  ' /proj/sot/ska/bin/arc5gl -user rpete -script ./zspace > ./zout'
+                cmd  = cmd1 + cmd2
+                os.system(cmd2)
+                #os.unlink('./zspace')
+
+            cmd = 'gzip -fd ' + fitsName + '.gz'
             os.system(cmd)
         except:
             continue
@@ -217,7 +227,10 @@ def hrc_dose_get_data(year, month):
 #
 #--- create an image file
 #
+
+            t0 = time.time()
             ichk =  create_image(line, 'ztemp.fits')
+            sys.stderr.write(f'create_image(): {time.time()-t0:.1f} seconds\n')
             #print("Section: " + str(i) + ' : Status: ' + str(ichk))
 #
 #--- for HRC S
@@ -237,8 +250,12 @@ def hrc_dose_get_data(year, month):
                 combine_image('ztemp.fits', fits)
                 hrciCnt[i] += 1
 
-        mcf.rm_files('out.fits')
-        mcf.rm_files(fitsName)
+        try:
+            #os.unlink('out.fits')
+            #os.unlink(fitsName)
+            pass
+        except Exception:
+            pass
 
     for i in range(0, 10):    
         if hrcsCnt[i] > 0:
@@ -259,7 +276,9 @@ def hrc_dose_get_data(year, month):
             cmd = 'gzip -f ' + data_i_dir + 'Month/*.fits'
             os.system(cmd)
         
+        t0 = time.time()
         createCumulative(year, month, 'HRC-I', data_i_dir, i)
+        sys.stderr.write(f'createCumulative(): {time.time()-t0:.1f} seconds\n')
 #
 #--- clean up 
 #
@@ -366,7 +385,7 @@ def createCumulative(year, month, detector, arch_dir, i=0):
             cmd2 = cmd2 + ofile + ' operation=add clobber=yes verbose=5'
             cmd  = cmd1 + cmd2
             bash(cmd,  env=ascdsenv)
-            mcf.rm_files('./ztemp.fits')
+            #os.unlink('./ztemp.fits')
         else:
             cmd  = 'mv -f ztemp.fits ' + ofile 
             os.system(cmd)
@@ -438,14 +457,15 @@ def combine_image(fits1, fits2):
             t1.close()
             t2.close()
     
-            mcf.rm_files(fits1)
+            #os.unlink(fits1)
 #
 #--- rename the combined fits image to "fits2"
 #
             cmd = 'mv -f mtemp.fits ' + fits2
             os.system(cmd)
         except:
-            mcf.rm_files(fits1)
+            pass
+            #os.unlink(fits1)
 
     else:
         cmd =  'mv ' + fits1 + ' ' + fits2
@@ -463,27 +483,34 @@ def create_image(line, outfile):
     cmd1 = "/usr/bin/env PERL5LIB="
     cmd2 = ' dmcopy "' + line + '" out.fits option=image clobber=yes'
     cmd  = cmd1 + cmd2
+    t0 = time.time()
     bash(cmd,  env=ascdsenv)
+    sys.stderr.write(f'dmcopy: {time.time()-t0:.1f} seconds\n')
 
-    try:
-        cmd1 = "/usr/bin/env PERL5LIB="
-        cmd2 = ' dmstat out.fits centroid=no > stest'
-        cmd  = cmd1 + cmd2
-        bash(cmd,  env=ascdsenv)
-    except:
-        pass
-#
-#--- check actually the image is created
-#
-    sdata = mcf.read_data_file('./stest', remove=1)
+#     try:
+#         cmd1 = "/usr/bin/env PERL5LIB="
+#         cmd2 = ' dmstat out.fits centroid=no > stest'
+#         cmd  = cmd1 + cmd2
+#         t0 = time.time()
+#         bash(cmd,  env=ascdsenv)
+#         sys.stderr.write(f'dmstat: {time.time()-t0:.1f} seconds\n')
+#     except:
+#         pass
+# #
+# #--- check actually the image is created
+# #
+#     sdata = HRCExp.read_data_file('./stest', remove=1)
+
+#     val = 'NA'
+#     for lent in sdata:
+#         m = re.search('mean', lent)
+#         if m is not None:
+#             atemp = re.split('\s+|\t+', lent)
+#             val = atemp[1]
+#             break
 
     val = 'NA'
-    for lent in sdata:
-        m = re.search('mean', lent)
-        if m is not None:
-            atemp = re.split('\s+|\t+', lent)
-            val = atemp[1]
-            break
+    val = HRCExp.fits_img_mean('out.fits')
          
     if val != 'NA' and float(val) > 0:
         cmd = 'mv out.fits ' + outfile
@@ -527,6 +554,14 @@ def make_month_list(year, startYear, stopYear, startMonth, stopMonth):
     return month_list
 
 #------------------------------------------------------------------------------------
+
+def find_local_evt1(fitsName):
+    m = re.match(r'hrcf(\d{5})', fitsName)
+    if m:
+        obsid = m.groups(0)[0]
+        files = glob.glob(f'/data/hrc/[is]/{obsid}/secondary/hrcf{obsid}_*evt1.fits*')
+        if files:
+            return files[0]
 
 if __name__ == '__main__':
     

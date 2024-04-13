@@ -1,5 +1,7 @@
 #! /bin/bash
 
+exit
+
 rm -rf Exc Scripts
 
 mkdir -p ./Exc

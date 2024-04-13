@@ -33,7 +33,7 @@ for ent in data:
 #--- append path to a privte folder
 #
 sys.path.append(bin_dir)
-sys.path.append(mta_dir)
+
 #
 #--- this convert fits files to image files
 #
@@ -81,14 +81,37 @@ def hrc_dose_create_run(year='', month=''):
 #
 #--- run scripts
 #
+
+    t0 = time.time()
     hdgd.hrc_dose_get_data(year, month)
+    t1 = time.time()
+    print(f'hrc_dose_get_data(): {t1-t0} seconds')
+
 #   hdci.hrc_dose_create_image(year, month)
+
+    t0 = time.time()
     hdci.create_hrc_maps(year, month)
+    print(f'create_hrc_maps(): {time.time()-t0:.1f} seconds')
+
+    t0 = time.time()
     hdsd.hrc_dose_extract_stat_data_month(year, month)
+    print(f'hrc_dose_extract_stat_data_month(): {time.time()-t0:.1f} seconds')
+
+    t0 = time.time()
     hdpes.hrc_dose_plot_exposure_stat()
+    print(f'hrc_dose_plot_exposure_stat(): {time.time()-t0:.1f} seconds')
+
+    t0 = time.time()
     hdhu.hrc_dose_make_data_html()
+    print(f'hrc_dose_make_data_html(): {time.time()-t0:.1f} seconds')
+
+    t0 = time.time()
     hdhu.update_main_html()
+    print(f'update_main_html(): {time.time()-t0:.1f} seconds')
+
+    t0 = time.time()
     hdhu.create_img_html('','')
+    print(f'create_img_html(): {time.time()-t0:.1f} seconds')
 #
 #--- update the date links of the image html page of the one month before the current ones
 #
@@ -104,7 +127,7 @@ def hrc_dose_create_run(year='', month=''):
 #
 #--- send out emial to admin
 #
-    text = 'HRC Exposure maps for ' + str(year) + '/' + str(month) + ' was prcoessed.\n'
+    text = 'HRC Exposure maps for ' + str(year) + '/' + str(month) + ' was processed.\n'
     text = text + "You still need to run:\n"
     text = text + "/data/legs/rpete/flight/hrc_exposure_map/Scripts/hrc_dose_create_image.py "
     text = text + str(year) + ' ' + str(month) + '1\n'
@@ -115,7 +138,7 @@ def hrc_dose_create_run(year='', month=''):
     cmd  = 'cat ./ztemp | mailx -s"Subject: HRC Exposure Map Processed" ' + admin
     os.system(cmd)
 
-    os.system('rm -rf .ztemp')
+    #os.unlink('./ztemp')
 
 #--------------------------------------------------------------------------------------------
 
@@ -129,12 +152,3 @@ if __name__ == '__main__':
         month = ''
 
     hrc_dose_create_run(year, month)
-
-
-
-
-
-
-
-
-
