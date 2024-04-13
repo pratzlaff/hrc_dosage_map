@@ -19,7 +19,7 @@ import time
 #
 #--- reading directory list
 #
-path = '/data/aschrc6/wilton/isobe/Project11/Scripts/house_keeping/dir_list'
+path = '/data/legs/rpete/flight/hrc_exposure_map/Scripts/house_keeping/dir_list'
 f    = open(path, 'r')
 data = [line.strip() for line in f.readlines()]
 f.close()
@@ -43,7 +43,7 @@ import hrc_dose_stat_data           as hdsd         #--- compute statistics
 import hrc_dose_html_updates        as hdhu         #--- update html pages
 import hrc_dose_plot_exposure_stat  as hdpes        #--- create stat plot
 
-admin = 'vkashyap@cfa.harvard.edu'
+admin = 'pratzlaff@cfa.harvard.edu'
 
 #--------------------------------------------------------------------------------------------
 #-- hrc_dose_create_run: a master scripts to run HRC scripts                               --
@@ -106,7 +106,7 @@ def hrc_dose_create_run(year='', month=''):
 #
     text = 'HRC Exposure maps for ' + str(year) + '/' + str(month) + ' was prcoessed.\n'
     text = text + "You still need to run:\n"
-    text = text + "/data/aschrc6/wilton/isobe/Project11/Scripts/hrc_dose_create_image.py "
+    text = text + "/data/legs/rpete/flight/hrc_exposure_map/Scripts/hrc_dose_create_image.py "
     text = text + str(year) + ' ' + str(month) + '1\n'
 
     with open('./ztemp', 'w') as fo:

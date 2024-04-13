@@ -24,7 +24,7 @@ ascdsenv = getenv('source /home/ascds/.ascrc -r release; \
 #
 #--- reading directory list
 #
-path = '/data/aschrc6/wilton/isobe/Project11/Scripts/house_keeping/dir_list'
+path = '/data/legs/rpete/flight/hrc_exposure_map/Scripts/house_keeping/dir_list'
 with open(path, 'r') as f:
     data = [line.strip() for line in f.readlines()]
 

@@ -1,0 +1,25 @@
+#! /bin/bash
+
+rm -rf Exc Scripts
+
+mkdir -p ./Exc
+cp -a /data/aschrc6/wilton/isobe/Project11/Scripts .
+rm -rf ./Scripts/__pycache__
+
+basedir=`pwd`
+wwwdir=/data/wdocs/rpete/HRC_Exposure
+outdir=$basedir/outdir
+dir_list=$basedir/Scripts/house_keeping/dir_list
+
+rm -rf $wwwdir $outdir
+
+mkdir -p $wwwdir/Sub_html
+mkdir -p $wwwdir/{Image,Plots}/HRC{I,S}/{Cumulative,Month}
+mkdir -p $outdir/{i,s}/Exposure_map/{Data,Image}/{Cumulative,Month}
+mkdir -p $outdir/{i,s}/Exposure_map/Stats
+
+perl -i -plne "s!/data/aschrc6/wilton/isobe/Project11!${basedir}!" Scripts/hrc_dose* $dir_list
+perl -i -plne "s!/data/hrc!${outdir}!" $dir_list
+perl -i -plne "s!/proj/web-cxc/htdocs/contrib/cxchrc/HRC_Exposure!${wwwdir}!" $dir_list
+perl -i -plne 's!vkashyap@!pratzlaff@!' Scripts/hrc_dose_create_run.py
+perl -i -plne 's! kashyap! rpete!' Scripts/hrc_dose_get_data.py

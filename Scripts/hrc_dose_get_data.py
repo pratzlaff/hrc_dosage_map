@@ -8,7 +8,7 @@
 #       author: t. isobe (tisobe@cfa.harvard.edu)                                       #
 #                                                                                       #
 #       last updated: Mar 21, 2021                                                      #
-#	VLK changed SQL user isobe to kashyap (2021-nov-01)				#
+#	VLK changed SQL user isobe to rpete (2021-nov-01)				#
 #	VLK added -f flag to gzip (2021-nov-04)				#
 #                                                                                       #
 #########################################################################################
@@ -27,7 +27,7 @@ ascdsenv = getenv('source /home/ascds/.ascrc -r release; source /home/mta/bin/re
 #
 #--- reading directory list
 #
-path = '/data/aschrc6/wilton/isobe/Project11/Scripts/house_keeping/dir_list'
+path = '/data/legs/rpete/flight/hrc_exposure_map/Scripts/house_keeping/dir_list'
 f    = open(path, 'r')
 data = [line.strip() for line in f.readlines()]
 f.close()
@@ -152,7 +152,7 @@ def hrc_dose_get_data(year, month):
     f.write(line)
     f.close()
     cmd1 = "/usr/bin/env PERL5LIB="
-    cmd2 =  ' /proj/sot/ska/bin/arc5gl -user kashyap -script ./zspace > ./zout'
+    cmd2 =  ' /proj/sot/ska/bin/arc5gl -user rpete -script ./zspace > ./zout'
     cmd  = cmd1 + cmd2
     os.system(cmd2)
     mcf.rm_files('./zspace')
@@ -187,7 +187,7 @@ def hrc_dose_get_data(year, month):
             f.write(line)
             f.close()
             cmd1 = "/usr/bin/env PERL5LIB="
-            cmd2 =  ' /proj/sot/ska/bin/arc5gl -user kashyap -script ./zspace > ./zout'
+            cmd2 =  ' /proj/sot/ska/bin/arc5gl -user rpete -script ./zspace > ./zout'
             cmd  = cmd1 + cmd2
             os.system(cmd2)
             mcf.rm_files('./zspace')
