@@ -1,6 +1,7 @@
 import astropy.io.fits
 import numpy as np
 import os
+import shutil
 
 def fits_read_raw(fname):
     """Return RAW coordinates from an events list, status-filtered for
@@ -29,6 +30,22 @@ def fits_img_hist(fname):
         dmax = img.max()
         hist, bin_edges = np.histogram(hdul[0].data, bins=dmax, range=(0.5, dmax+0.5))
         return hist, bin_edges
+
+def fits_img_hist(fname):
+    with astropy.io.fits.open(fname) as hdul:
+        img = hdul[0].data
+        dmax = img.max()
+        hist, bin_edges = np.histogram(hdul[0].data, bins=dmax, range=(0.5, dmax+0.5))
+        return hist, bin_edges
+
+def fits_img_add_inplace(if1, if2):
+    with astropy.io.fits.open(if1) as hdul1:
+        with astropy.io.fits.open(if2, mode='update') as hdul2:
+            hdul2[0].data += hdul1[0].data
+
+def fits_img_add(if1, if2, of):
+    shutil.copyfile(if1, of)
+    fits_img_add_inplace(if2, of)
 
 def status_mask(status):
     """Return mask for status-filtered events."""

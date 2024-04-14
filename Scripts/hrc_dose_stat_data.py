@@ -24,8 +24,8 @@ import HRCExp
 #
 #--- from ska
 #
-from Ska.Shell import getenv, bash
-ascdsenv = getenv('source /home/ascds/.ascrc -r release', shell='tcsh')
+#from Ska.Shell import getenv, bash
+#ascdsenv = getenv('source /home/ascds/.ascrc -r release', shell='tcsh')
 #
 #--- reading directory list
 #
@@ -103,7 +103,7 @@ def comp_stat(ifile, year, month, ofile):
 #             out = readStat(zspace)
         out = HRCExp.stats(ifile)
         if out[3]>0:
-            mcf.rm_files(zspace)
+            os.unlink(zspace)
             (sig1, sig2, sig3) = find_sigma_values(ifile)
 
         else:
@@ -158,7 +158,7 @@ def readStat(ifile):
     max_pos_x = 'NA'
     max_pos_y = 'NA'
 
-    data = mcf.read_data_file(ifile)
+    data = HRCExp.read_data_file(ifile)
 
     for ent in data:
         ent.lstrip()

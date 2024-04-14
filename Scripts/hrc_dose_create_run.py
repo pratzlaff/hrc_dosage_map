@@ -90,7 +90,7 @@ def hrc_dose_create_run(year='', month=''):
 #   hdci.hrc_dose_create_image(year, month)
 
     t0 = time.time()
-    hdci.create_hrc_maps(year, month)
+    #hdci.create_hrc_maps(year, month)
     print(f'create_hrc_maps(): {time.time()-t0:.1f} seconds')
 
     t0 = time.time()
@@ -127,10 +127,10 @@ def hrc_dose_create_run(year='', month=''):
 #
 #--- send out emial to admin
 #
-    text = 'HRC Exposure maps for ' + str(year) + '/' + str(month) + ' was processed.\n'
-    text = text + "You still need to run:\n"
-    text = text + "/data/legs/rpete/flight/hrc_exposure_map/Scripts/hrc_dose_create_image.py "
-    text = text + str(year) + ' ' + str(month) + '1\n'
+    text = f'HRC Exposure maps for {year}/{month} were processed.\n\
+You still need to run:\n\
+/data/legs/rpete/flight/hrc_exposure_map/Scripts/hrc_dose_create_image.py {year} {month+1}\n\
+'
 
     with open('./ztemp', 'w') as fo:
         fo.write(text)

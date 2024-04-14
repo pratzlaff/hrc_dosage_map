@@ -28,8 +28,8 @@ import HRCExp
 #
 #--- from ska
 #
-from Ska.Shell import getenv, bash
-ascdsenv = getenv('source /home/ascds/.ascrc -r release; source /home/mta/bin/reset_param ', shell='tcsh')
+#from Ska.Shell import getenv, bash
+#ascdsenv = getenv('source /home/ascds/.ascrc -r release; source /home/mta/bin/reset_param ', shell='tcsh')
 #
 #--- reading directory list
 #
@@ -115,10 +115,12 @@ def hrc_dose_get_data(year, month):
     outfile_i = ['NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA']
     for i in range(0, 9):
         outfile_i[i] = 'HRCI_' + str(smonth) + '_' + str(year) + '_' + str(i) + '.fits'
+    outfile_i = [f'HRCI_{month:02d}_{year}_{i}.fits' for i in range(9)]
 
     outfile_s = ['NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA']
     for i in range(0, 10):
         outfile_s[i] = 'HRCS_' + str(smonth) + '_' + str(year) + '_' + str(i) + '.fits'
+    outfile_s = [f'HRCS_{month:02d}_{year}_{i}.fits' for i in range(10)]
 #
 #--- using ar5gl, get file names
 #
@@ -360,22 +362,9 @@ def createCumulative(year, month, detector, arch_dir, i=0):
 #
     pyear = year
     pmonth = month -1
-
     if pmonth < 1:
         pmonth = 12
         pyear -= 1
-
-    syear  = str(year)
-    smonth = str(month)
-
-    if month < 10:
-        smonth = '0' + smonth
-
-    spyear  = str(pyear)
-    spmonth = str(pmonth)
-
-    if pmonth < 10:
-        spmonth = '0' + spmonth
 
     if detector == 'HRC-I':
         inst = 'HRCI'
@@ -384,47 +373,52 @@ def createCumulative(year, month, detector, arch_dir, i=0):
 #
 #--- set file names
 #
-    hrc   = inst + '_'         + smonth  + '_' + syear  + '_' + str(i) + '.fits.gz'
-    chrc  = inst + '_08_1999_' + spmonth + '_' + spyear + '_' + str(i) + '.fits.gz'
-    chrc2 = inst + '_08_1999_' + smonth  + '_' + syear  + '_' + str(i) + '.fits'
-    dfile = arch_dir + 'Month/' + hrc
-    pfile = arch_dir + 'Cumulative/' + chrc
-    ofile = arch_dir + 'Cumulative/' + chrc2
+    hrc   = f'{inst}_{month:02d}_{year}_{i}.fits.gz'
+    # chrc2 = f'{inst}_08_1999_{month:02d}_{year}_{i}.fits'
+    chrc  = f'{inst}_08_1999_{pmonth:02d}_{pyear}_{i}.fits.gz'
+    chrc2 = f'{inst}_08_1999_{month:02d}_{year}_{i}.fits.gz'
+
+    dfile = f'{arch_dir}/Month/{inst}_{month:02d}_{year}_{i}.fits.gz'
+    pfile = f'{arch_dir}/Cumulative/{inst}_08_1999_{pmonth:02d}_{pyear}_{i}.fits.gz'
+    ofile = f'{arch_dir}/Cumulative/{inst}_08_1999_{month:02d}_{year}_{i}.fits.gz'
 
 #
 #--- if the monthly file exists, reduce the size of the file before combine it 
 #--- into a cumulative data
 #
     if os.path.isfile(dfile):
-        line = dfile + '[opt type=i2,null=-99]'
-        cmd1 = "/usr/bin/env PERL5LIB="
-        cmd2 = ' dmcopy infile="' + line + '"  outfile="./ztemp.fits"  clobber="yes"'
-        cmd  = cmd1 + cmd2
-        bash(cmd,  env=ascdsenv)
+        # line = dfile + '[opt type=i2,null=-99]'
+        # cmd1 = "/usr/bin/env PERL5LIB="
+        # cmd2 = ' dmcopy infile="' + line + '"  outfile="./ztemp.fits"  clobber="yes"'
+        # cmd  = cmd1 + cmd2
+        # bash(cmd,  env=ascdsenv)
 
         if os.path.isfile(pfile):
-            cmd1 = "/usr/bin/env PERL5LIB="
-            cmd2 = ' dmimgcalc infile=' + pfile
-            cmd2 = cmd2 + ' infile2=ztemp.fits outfile=' 
-            cmd2 = cmd2 + ofile + ' operation=add clobber=yes verbose=5'
-            cmd  = cmd1 + cmd2
-            bash(cmd,  env=ascdsenv)
-            #os.unlink('./ztemp.fits')
+            # cmd1 = "/usr/bin/env PERL5LIB="
+            # cmd2 = ' dmimgcalc infile=' + pfile
+            # cmd2 = cmd2 + ' infile2=ztemp.fits outfile=' 
+            # cmd2 = cmd2 + ofile + ' operation=add clobber=yes verbose=5'
+            # cmd  = cmd1 + cmd2
+            # bash(cmd,  env=ascdsenv)
+            # os.unlink('./ztemp.fits')
+            HRCExp.fits_img_add(dfile, pfile, ofile)
+            print(dfile, pfile, ofile)
         else:
-            cmd  = 'mv -f ztemp.fits ' + ofile 
-            os.system(cmd)
+            # cmd  = 'mv -f ztemp.fits ' + ofile 
+            # os.system(cmd)
+            shutil:copyfile(dfile, ofile)
 
-
-        cmd  = 'gzip -f ' + ofile 
-        os.system(cmd)
+        # cmd  = 'gzip -f ' + ofile 
+        # os.system(cmd)
 #
-#--- if the monthly fie does not exist, just copy the last month's cumulative data
+#--- if the monthly file does not exist, just copy the last month's cumulative data
 #
     else:
         try:
-            cmd = 'cp ' + arch_dir + 'Cumulative/' + chrc + ' '  + arch_dir 
-            cmd = cmd   + 'Cumulative/'  + chrc2 + '.gz'
-            os.system(cmd)
+            # cmd = 'cp ' + arch_dir + 'Cumulative/' + chrc + ' '  + arch_dir 
+            # cmd = cmd   + 'Cumulative/'  + chrc2 + '.gz'
+            # os.system(cmd)
+            shutil:copyfile(pfile, ofile)
         except:
             pass
 
@@ -508,7 +502,7 @@ def create_image(line, outfile):
     cmd2 = ' dmcopy "' + line + '" out.fits option=image clobber=yes'
     cmd  = cmd1 + cmd2
     t0 = time.time()
-    bash(cmd,  env=ascdsenv)
+    #bash(cmd,  env=ascdsenv)
     sys.stderr.write(cmd+'\n')
     sys.stderr.write(f'dmcopy: {time.time()-t0:.1f} seconds\n')
 
