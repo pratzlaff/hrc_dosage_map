@@ -13,9 +13,9 @@
 #                                                                                       #
 #########################################################################################
 
-import astropy.io.fits  as pyfits
+import astropy.io.fits
 import glob
-import numpy
+import numpy as np
 import os
 import re
 import shutil
@@ -210,9 +210,11 @@ def hrc_dose_get_data(year, month):
 #---checking which HRC (S or I)
 #
         detector = whichHRC(fitsName) 
-        print("Processing: " + fitsName + ' : ' + detector)
+        sys.stderr.write("Processing: " + fitsName + ' : ' + detector+'\n')
+        rawx, rawy = HRCExp.fits_read_raw(fitsName)
+
 #
-#---- full image is devided into 10 sections
+#---- full image is divided into 10 sections
 #
         for i in range(0, 10):
 #
@@ -220,17 +222,36 @@ def hrc_dose_get_data(year, month):
 #
             if detector == 'HRC-I' and i == 9:
                 break
-#
-#--- set command line
-#
-            line = set_cmd_line(fitsName, detector,  i)
-#
-#--- create an image file
-#
 
-            t0 = time.time()
-            ichk =  create_image(line, 'ztemp.fits')
-            sys.stderr.write(f'create_image(): {time.time()-t0:.1f} seconds\n')
+            if detector == 'HRC-S':
+                x0 = xstart_s[i]
+                x1 = xend_s[i]
+                y0 = ystart_s[i]
+                y1 = yend_s[i]
+            elif detector == 'HRC-I':
+                x0 = xstart_i[i]
+                x1 = xend_i[i]
+                y0 = ystart_i[i]
+                y1 = yend_i[i]
+
+            #t0 = time.time()
+            hist = HRCExp.raw_hist(rawx, rawy, x0, x1, y0, y1)
+            if hist.sum():
+                hdu = astropy.io.fits.PrimaryHDU(hist.astype(np.int32))
+                HRCExp.hdu_add_img_wcs(hdu, x0, y0)
+                hdul = astropy.io.fits.HDUList([hdu])
+                hdul.writeto('ztemp.fits', checksum=True, overwrite=True)
+                ichk = 1
+            else:
+                sys.stderr.write(f'no counts: {fitsName}, [{x0}-{x1}, {y0}-{y1}]\n')
+                ichk = 0
+            #sys.stderr.write(f'HRCExp.raw_hist(): {time.time()-t0:.1f} seconds\n')
+
+            # t0 = time.time()
+            # line = set_cmd_line(fitsName, detector,  i)
+            # ichk =  create_image(line, 'ztemp.fits')
+            # sys.stderr.write(f'create_image(): {time.time()-t0:.1f} seconds\n')
+            # if i==2: sys.exit(0)
             #print("Section: " + str(i) + ' : Status: ' + str(ichk))
 #
 #--- for HRC S
@@ -276,14 +297,17 @@ def hrc_dose_get_data(year, month):
             cmd = 'gzip -f ' + data_i_dir + 'Month/*.fits'
             os.system(cmd)
         
-        t0 = time.time()
+        #t0 = time.time()
         createCumulative(year, month, 'HRC-I', data_i_dir, i)
-        sys.stderr.write(f'createCumulative(): {time.time()-t0:.1f} seconds\n')
+        #sys.stderr.write(f'createCumulative(): {time.time()-t0:.1f} seconds\n')
 #
 #--- clean up 
 #
     cmd = 'rm -rf ./*fits'
     os.system(cmd)
+
+def status_filter():
+    return '[status=xxxxxx00xxxxxxxxx000x000xx00xxxx]'
 
 #-----------------------------------------------------------------------------------------
 #-- set_cmd_line: generate image creating command line for dmcopy                      ---
@@ -414,7 +438,7 @@ def whichHRC(ifile):
     input:  ifile       --- fits file name
     output: detector    --- detector name
     """
-    flist     = pyfits.open(ifile)
+    flist     = astropy.io.fits.open(ifile)
     try:
         detector  = flist[1].header['DETNAM']
     except:
@@ -438,8 +462,8 @@ def combine_image(fits1, fits2):
     """
     if os.path.isfile(fits2):
         try:
-            t1 = pyfits.open(fits1)
-            t2 = pyfits.open(fits2)
+            t1 = astropy.io.fits.open(fits1)
+            t2 = astropy.io.fits.open(fits2)
      
             img1 = t1[0].data
             img2 = t2[0].data
@@ -451,8 +475,8 @@ def combine_image(fits1, fits2):
      
             else:
                 new_img = img1 + img2
-                header  = pyfits.getheader(fits1)
-                pyfits.writeto('./mtemp.fits', new_img, header)
+                header  = astropy.io.fits.getheader(fits1)
+                astropy.io.fits.writeto('./mtemp.fits', new_img, header)
      
             t1.close()
             t2.close()
@@ -485,6 +509,7 @@ def create_image(line, outfile):
     cmd  = cmd1 + cmd2
     t0 = time.time()
     bash(cmd,  env=ascdsenv)
+    sys.stderr.write(cmd+'\n')
     sys.stderr.write(f'dmcopy: {time.time()-t0:.1f} seconds\n')
 
 #     try:

@@ -10,12 +10,17 @@
 #                                                                                               #
 #################################################################################################
 
-import sys
+import astropy.io.fits
+import numpy as np
 import os
-import string
-import re
-import time
 import random
+import re
+import string
+import sys
+import time
+
+import HRCExp
+
 #
 #--- from ska
 #
@@ -46,6 +51,7 @@ import mta_common_functions as mcf
 rtail  = int(time.time() * random.random())  
 zspace = '/tmp/zspace' + str(rtail)
 
+
 #------------------------------------------------------------------------------------------
 #--- comp_stat: compute statistics for the hrc image and print out the result            --
 #------------------------------------------------------------------------------------------
@@ -63,38 +69,40 @@ def comp_stat(ifile, year, month, ofile):
 #
 #--- to avoid getting min value from the outside of the frame edge of a CCD, set threshold
 #
-        try:
-            cmd1 = "/usr/bin/env PERL5LIB="
-            cmd2 = ' /bin/nice -n15 dmimgthresh infile=' + ifile 
-            cmd2 = cmd2 + ' outfile=zcut.fits  cut="0:1.e10" value=0 clobber=yes'
+#         try:
+#             cmd1 = "/usr/bin/env PERL5LIB="
+#             cmd2 = ' /bin/nice -n15 dmimgthresh infile=' + ifile 
+#             cmd2 = cmd2 + ' outfile=zcut.fits  cut="0:1.e10" value=0 clobber=yes'
 
-            cmd  = cmd1 + cmd2
-            bash(cmd,  env=ascdsenv)
-            cmd1 = "/usr/bin/env PERL5LIB="
-            cmd2 = ' dmstat  infile=zcut.fits  centroid=no >' + zspace
-            cmd  = cmd1 + cmd2
-            bash(cmd,  env=ascdsenv)
+#             cmd  = cmd1 + cmd2
+#             bash(cmd,  env=ascdsenv)
+#             cmd1 = "/usr/bin/env PERL5LIB="
+#             cmd2 = ' dmstat  infile=zcut.fits  centroid=no >' + zspace
+#             cmd  = cmd1 + cmd2
+#             bash(cmd,  env=ascdsenv)
 
-            mcf.rm_files('./zcut.fits')
-            data = mcf.read_data_file(zspace)
-        except:
-            data = []
+#             mcf.rm_files('./zcut.fits')
+#             data = mcf.read_data_file(zspace)
+#         except:
+#             data = []
         
-        val = 'NA'
-        for ent in data:
-            ent.lstrip()
-            m = re.search('mean', ent)
-            if m is not None:
-                atemp = re.split('\s+|\t', ent)
-                val   = atemp[1]
-                break
+#         val = 'NA'
+#         for ent in data:
+#             ent.lstrip()
+#             m = re.search('mean', ent)
+#             if m is not None:
+#                 atemp = re.split('\s+|\t', ent)
+#                 val   = atemp[1]
+#                 break
 
-        if val != 'NA':
-#
-#--- output of readStat is:
-#--- (mean,  dev,  dmin,  dmax , min_pos_x,  min_pos_y,  max_pos_x,  max_pos_y)
-#
-            out = readStat(zspace)
+#         if val != 'NA':
+# #
+# #--- output of readStat is:
+# #--- (mean,  dev,  dmin,  dmax , min_pos_x,  min_pos_y,  max_pos_x,  max_pos_y)
+# #
+#             out = readStat(zspace)
+        out = HRCExp.stats(ifile)
+        if out[3]>0:
             mcf.rm_files(zspace)
             (sig1, sig2, sig3) = find_sigma_values(ifile)
 
@@ -192,39 +200,45 @@ def find_sigma_values(fits):
     input:  fits    --- image fits file name
     output: (sigma1, sigma2, sigma3)
     """
-#
-#-- make histgram
-#
-    cmd1 = "/usr/bin/env PERL5LIB="
-    cmd2 = ' dmimghist infile=' + fits 
-    cmd2 = cmd2 + '  outfile=outfile.fits hist=1::1 strict=yes clobber=yes'
-    cmd  = cmd1 + cmd2
-    bash(cmd,  env=ascdsenv)
+# #
+# #-- make histgram
+# #
+#     cmd1 = "/usr/bin/env PERL5LIB="
+#     cmd2 = ' dmimghist infile=' + fits 
+#     cmd2 = cmd2 + '  outfile=outfile.fits hist=1::1 strict=yes clobber=yes'
+#     cmd  = cmd1 + cmd2
+#     bash(cmd,  env=ascdsenv)
 
-    cmd1 = "/usr/bin/env PERL5LIB="
-    cmd2 = ' dmlist infile=outfile.fits outfile=' + zspace + ' opt=data'
-    cmd  = cmd1 + cmd2
-    bash(cmd,  env=ascdsenv)
+#     cmd1 = "/usr/bin/env PERL5LIB="
+#     cmd2 = ' dmlist infile=outfile.fits outfile=' + zspace + ' opt=data'
+#     cmd  = cmd1 + cmd2
+#     bash(cmd,  env=ascdsenv)
 
-    data = mcf.read_data_file(zspace, remove=1)
-#
-#--- read bin # and its count rate
-#
-    hbin = []
-    hcnt = []
-    vsum = 0
+#     data = mcf.read_data_file(zspace, remove=1)
+# #
+# #--- read bin # and its count rate
+# #
+#     hbin = []
+#     hcnt = []
+#     vsum = 0
 
-    for ent in data:
-        atemp = re.split('\s+|\t+', ent)
-        if mcf.is_neumeric(atemp[0]):
-            hbin.append(float(atemp[1]))
-            val = int(atemp[4])
-            hcnt.append(val)
-            vsum += val
+#     for ent in data:
+#         atemp = re.split('\s+|\t+', ent)
+#         if mcf.is_neumeric(atemp[0]):
+#             hbin.append(float(atemp[1]))
+#             val = int(atemp[4])
+#             hcnt.append(val)
+#             vsum += val
+
 #
 #--- checking one sigma and two sigma counts
 #
-    if len(hbin) > 0:
+    hcnt, bin_edges = HRCExp.fits_img_hist(fits)
+    hbin = 0.5*(bin_edges[1:] + bin_edges[:-1])
+    vsum = hcnt.sum()
+
+    # if len(hbin) > 0:
+    if hbin.size > 0:
         v68 = int(0.68  * vsum)
         v95 = int(0.95  * vsum)
         v99 = int(0.997 * vsum)
@@ -232,7 +246,8 @@ def find_sigma_values(fits):
         sigma2 = -999
         sigma3 = -999
         acc= 0
-        for i in range(0, len(hbin)):
+        # for i in range(0, len(hbin)):
+        for i in range(0, hbin.size):
             acc += hcnt[i]
             if acc > v68 and sigma1 < 0:
                 sigma1 = hbin[i]
