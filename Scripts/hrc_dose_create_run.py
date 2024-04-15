@@ -11,37 +11,19 @@
 #                                                                                               #
 #################################################################################################
 
-import sys
 import os
-import string
 import re
+import string
+import sys
 import time
-#
-#--- reading directory list
-#
-path = '/data/legs/rpete/flight/hrc_exposure_map/Scripts/house_keeping/dir_list'
-f    = open(path, 'r')
-data = [line.strip() for line in f.readlines()]
-f.close()
 
-for ent in data:
-    atemp = re.split(':', ent)
-    var  = atemp[1].strip()
-    line = atemp[0].strip()
-    exec("%s = %s" %(var, line))
-#
-#--- append path to a privte folder
-#
-sys.path.append(bin_dir)
-
-#
-#--- this convert fits files to image files
-#
 import hrc_dose_get_data            as hdgd         #--- extract data
 import hrc_dose_create_image        as hdci         #--- create png files
 import hrc_dose_stat_data           as hdsd         #--- compute statistics
 import hrc_dose_html_updates        as hdhu         #--- update html pages
 import hrc_dose_plot_exposure_stat  as hdpes        #--- create stat plot
+
+import HRCExp
 
 admin = 'pratzlaff@cfa.harvard.edu'
 
@@ -61,14 +43,10 @@ def hrc_dose_create_run(year='', month=''):
 #-- find today's date
 #
     if year == '':
-        today = time.strftime("%Y:%m:%d", time.gmtime())
-        atemp = re.split(':', today)
-        year  = int(float(atemp[0]))
-        month = int(float(atemp[1]))
-        mday  = int(float(atemp[2]))
+        year, month, mday = time.gmtime()[0:3]
     else:
-        year  = int(float(year))
-        month = int(float(month))
+        year  = int(year)
+        month = int(month)
         mday  = 30
 #
 #--- if it is the first 10 days of the month, update for the previous month
@@ -122,23 +100,17 @@ def hrc_dose_create_run(year='', month=''):
         lyear -= 1
     hdhu.create_img_html(lyear, lmonth)
 
-    cmd = 'rm -rf *fits zout'
-    os.system(cmd)
+    # cmd = 'rm -rf *fits zout'
+    # os.system(cmd)
 #
-#--- send out emial to admin
+#--- send email to admin
 #
     text = f'HRC Exposure maps for {year}/{month} were processed.\n\
 You still need to run:\n\
 /data/legs/rpete/flight/hrc_exposure_map/Scripts/hrc_dose_create_image.py {year} {month+1}\n\
 '
-
-    with open('./ztemp', 'w') as fo:
-        fo.write(text)
-
-    cmd  = 'cat ./ztemp | mailx -s"Subject: HRC Exposure Map Processed" ' + admin
-    os.system(cmd)
-
-    #os.unlink('./ztemp')
+    global admin
+    HRCExp.send_email(admin, text)
 
 #--------------------------------------------------------------------------------------------
 

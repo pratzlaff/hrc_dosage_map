@@ -1,7 +1,24 @@
 import astropy.io.fits
+import glob
 import numpy as np
 import os
+import re
 import shutil
+import subprocess
+
+#
+#--- reading directory list
+#
+path = '/data/legs/rpete/flight/hrc_exposure_map/Scripts/house_keeping/dir_list'
+f    = open(path, 'r')
+data = [line.strip() for line in f.readlines()]
+f.close()
+
+for ent in data:
+    atemp = re.split(':', ent)
+    var  = atemp[1].strip()
+    line = atemp[0].strip()
+    exec("%s = %s" %(var, line))
 
 def fits_read_raw(fname):
     """Return RAW coordinates from an events list, status-filtered for
@@ -63,6 +80,8 @@ def stats(fname):
     with astropy.io.fits.open(fname) as hdul:
         image = hdul[0].data
         hdr = hdul[0].header
+        #--- to avoid getting min value from the outside of the frame
+        #--- edge of a CCD, set threshold
         image[image<0] = 0
         image[image>1e10] = 0
         mean = image.mean()
@@ -132,3 +151,124 @@ def read_data_file(ifile, remove=0, ctype='r'):
         os.unlink(ifile)
 
     return data
+
+def change_month_format(month):
+    """
+    cnvert month format between digit and three letter month
+    input:  month   --- either digit month or letter month
+    oupupt: either digit month or letter month
+    """
+    m_list = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',\
+              'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+#
+#--- check whether the input is digit
+#
+    try:
+        var = int(float(month))
+        if (var < 1) or (var > 12):
+            return 'NA'
+        else:
+            return m_list[var-1]
+#
+#--- if not, return month #
+#
+    except:
+        mon = 'NA'
+        var = month.lower()
+        for k in range(0, 12):
+            if var == m_list[k].lower():
+                return k+1
+
+        return mon
+
+def read_ocat():
+    ocat='/data/legs/rpete/flight/hrc_exposure_map/Scripts/house_keeping/sot_ocat.out'
+    mdict = {
+        'Jan':1,
+        'Feb':2,
+        'Mar':3,
+        'Apr':4,
+        'May':5,
+        'Jun':6,
+        'Jul':7,
+        'Aug':8,
+        'Sep':9,
+        'Oct':10,
+        'Nov':11,
+        'Dec':12,
+    }
+
+    obsids = []
+    years = []
+    months = []
+    inst = []
+
+    with open(ocat) as f:
+        for line in f:
+            cols = [s.strip() for s in line.split('^')]
+            if cols[13] != 'NULL':
+                m = re.search(r'(\w+)\s+\d+\s+(\d+)', cols[13])
+                if m:
+                    obsids.append(int(cols[1]))
+                    inst.append(cols[12])
+                    months.append(int(mdict[m.groups()[0]]))
+                    years.append(int(m.groups()[1]))
+    return np.array(obsids), np.array(years), np.array(months), np.array(inst)
+
+#--------------------------------------------------------------------------
+#-- is_neumeric: checking the input is neumeric value                    --
+#--------------------------------------------------------------------------
+
+def is_neumeric(val):
+    """
+    checking the input is neumeric value
+    input:  val --- input value
+    output: True/False
+    """
+
+    try:
+        var = float(val)
+        return True
+    except:
+        return False
+
+def year_month_obsids(year, month):
+    obsids, years, months, insts = read_ocat()
+    mask = (years==year) & (months==month) & ((insts=='HRC-I')|(insts=='HRC-S'))
+    return obsids[mask], insts[mask]
+
+def retrieve_archived_evt1(obsid):
+    input = f'\
+operation=retrieve\n\
+dataset=flight\n\
+obsid={obsid:05d}\n\
+detector=hrc\n\
+filetype=evt1\n\
+level=1\n\
+go\n\
+'
+    p = subprocess.Popen(
+        ['/proj/axaf/simul/bin/arc5gl', '-stdin'],
+        stdin=subprocess.PIPE,
+        stdout=subprocess.PIPE,
+    )
+    output = p.communicate(input=input.encode())[0].decode()
+    try:
+        return re.search('hrcf.*_evt1.fits.gz', output).group()
+    except:
+        raise Exception(f'no archived EVT1 file found for obsid {obsid:05d}')
+
+def send_email(address, message):
+    p = subprocess.Popen(
+        ['mailx', '-sSubject: HRC Exposure Map Processed', address],
+        stdin=subprocess.PIPE,
+        stdout=subprocess.PIPE,
+    )
+    output = p.communicate(input=message.encode())[0].decode()
+
+def find_local_evt1(obsid):
+    files = glob.glob(f'/data/hrc/[is]/{obsid:05d}/secondary/hrcf{obsid:05d}_*evt1.fits*')
+    if files:
+        return files[0]
+    else:
+        raise Exception(f'no local evt1 file found for obsid {obsid:05d}')

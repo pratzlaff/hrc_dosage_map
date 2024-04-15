@@ -27,6 +27,9 @@ from pylab import *
 import matplotlib.pyplot as plt
 import matplotlib.font_manager as font_manager
 import matplotlib.lines as lines
+
+import HRCExp
+
 #
 #--- reading directory list
 #
@@ -45,7 +48,7 @@ for ent in data:
 sys.path.append(mta_dir)
 sys.path.append(bin_dir)
 
-import mta_common_functions     as mcf
+#import mta_common_functions     as mcf
 
 #------------------------------------------------------------------------------------------------
 #--- hrc_dose_plot_exposure_stat: read hrc database, and plot history of exposure             ---
@@ -110,7 +113,7 @@ def read_hrc_stat_data(indir, inst, part):
     s3   = []
 
     ifile = indir + inst + '_' + part + '_out'
-    data  = mcf.read_data_file(ifile)
+    data  = HRCExp.read_data_file(ifile)
 
     for ent in data:
 #
@@ -119,7 +122,7 @@ def read_hrc_stat_data(indir, inst, part):
 #
         mc  = re.search('na', str(ent).lower())
         if mc is not None:
-            atemp = re.split('\s+', ent)
+            atemp = re.split(r'\s+', ent)
             time  = float(atemp[0]) + float(atemp[1])/12.0 + 0.5
             date.append(time)
             avg.append(0)
@@ -132,7 +135,7 @@ def read_hrc_stat_data(indir, inst, part):
 #--- normal case: date, mean, min, max, std1, std2, std3
 #
         else:
-            atemp = re.split('\s+', ent)
+            atemp = re.split(r'\s+', ent)
             time  = float(atemp[0]) + float(atemp[1])/12.0 + 0.5
             date.append(time)
             avg.append(float(atemp[2]))

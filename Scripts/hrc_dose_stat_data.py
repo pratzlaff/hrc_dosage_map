@@ -21,37 +21,6 @@ import time
 
 import HRCExp
 
-#
-#--- from ska
-#
-#from Ska.Shell import getenv, bash
-#ascdsenv = getenv('source /home/ascds/.ascrc -r release', shell='tcsh')
-#
-#--- reading directory list
-#
-path = '/data/legs/rpete/flight/hrc_exposure_map/Scripts/house_keeping/dir_list'
-with open(path, 'r') as f:
-    data = [line.strip() for line in f.readlines()]
-
-for ent in data:
-    atemp = re.split(':', ent)
-    var  = atemp[1].strip()
-    line = atemp[0].strip()
-    exec("%s = %s" %(var, line))
-#
-#--- append path to a private folder
-#
-sys.path.append(bin_dir)
-sys.path.append(mta_dir)
-
-import mta_common_functions as mcf
-#
-#--- temp writing file name
-#
-rtail  = int(time.time() * random.random())  
-zspace = '/tmp/zspace' + str(rtail)
-
-
 #------------------------------------------------------------------------------------------
 #--- comp_stat: compute statistics for the hrc image and print out the result            --
 #------------------------------------------------------------------------------------------
@@ -66,44 +35,8 @@ def comp_stat(ifile, year, month, ofile):
     output: ofile   --- a file with stat results updated
     """
     if os.path.isfile(ifile):
-#
-#--- to avoid getting min value from the outside of the frame edge of a CCD, set threshold
-#
-#         try:
-#             cmd1 = "/usr/bin/env PERL5LIB="
-#             cmd2 = ' /bin/nice -n15 dmimgthresh infile=' + ifile 
-#             cmd2 = cmd2 + ' outfile=zcut.fits  cut="0:1.e10" value=0 clobber=yes'
-
-#             cmd  = cmd1 + cmd2
-#             bash(cmd,  env=ascdsenv)
-#             cmd1 = "/usr/bin/env PERL5LIB="
-#             cmd2 = ' dmstat  infile=zcut.fits  centroid=no >' + zspace
-#             cmd  = cmd1 + cmd2
-#             bash(cmd,  env=ascdsenv)
-
-#             mcf.rm_files('./zcut.fits')
-#             data = mcf.read_data_file(zspace)
-#         except:
-#             data = []
-        
-#         val = 'NA'
-#         for ent in data:
-#             ent.lstrip()
-#             m = re.search('mean', ent)
-#             if m is not None:
-#                 atemp = re.split('\s+|\t', ent)
-#                 val   = atemp[1]
-#                 break
-
-#         if val != 'NA':
-# #
-# #--- output of readStat is:
-# #--- (mean,  dev,  dmin,  dmax , min_pos_x,  min_pos_y,  max_pos_x,  max_pos_y)
-# #
-#             out = readStat(zspace)
         out = HRCExp.stats(ifile)
         if out[3]>0:
-            os.unlink(zspace)
             (sig1, sig2, sig3) = find_sigma_values(ifile)
 
         else:
@@ -138,57 +71,6 @@ def comp_stat(ifile, year, month, ofile):
         with open(ofile, 'w') as fo:
             fo.write(line)
 
-#------------------------------------------------------------------------------------------
-#--- readStat:  dmstat output file and extract data values.                             ---
-#------------------------------------------------------------------------------------------
-
-def readStat(ifile):
-
-    """
-    read dmstat output file and extract data values. 
-    input:  ifile    --- input file name
-    output: (mean, dev, min, max, min_pos_x, min_pos_y, max_pos_x, max_pos_y)
-    """
-    mean      = 'NA'
-    dev       = 'NA'
-    dmin      = 'NA'
-    dmax      = 'NA'
-    min_pos_x = 'NA'
-    min_pos_y = 'NA'
-    max_pos_x = 'NA'
-    max_pos_y = 'NA'
-
-    data = HRCExp.read_data_file(ifile)
-
-    for ent in data:
-        ent.lstrip()
-        atemp = re.split('\s+|\t+', ent)
-        m1 = re.search('mean',  ent)
-        m2 = re.search('sigma', ent)
-        m3 = re.search('min',   ent)
-        m4 = re.search('max',   ent)
-
-        if m1 is not None:
-            mean = float(atemp[1])
-
-        elif m2 is not None:
-            dev  = float(atemp[1])
-
-        elif m3 is not None:
-            dmin  = float(atemp[1])
-            btemp = re.split('\(', ent)
-            ctemp = re.split('\s+|\t+', btemp[1])
-            min_pos_x = float(ctemp[1])
-            min_pos_y = float(ctemp[2])
-
-        elif m4 is not None:
-            dmax  = float(atemp[1])
-            btemp = re.split('\(', ent)
-            ctemp = re.split('\s+|\t+', btemp[1])
-            max_pos_x = float(ctemp[1])
-            max_pos_y = float(ctemp[2])
-
-    return (mean, dev, dmin, dmax, min_pos_x, min_pos_y, max_pos_x, max_pos_y)
 
 #------------------------------------------------------------------------------------------
 #-- find_sigma_values: find 2 sigma, 3sigma, and 4 sigma values of the given data        --
@@ -200,39 +82,10 @@ def find_sigma_values(fits):
     input:  fits    --- image fits file name
     output: (sigma1, sigma2, sigma3)
     """
-# #
-# #-- make histgram
-# #
-#     cmd1 = "/usr/bin/env PERL5LIB="
-#     cmd2 = ' dmimghist infile=' + fits 
-#     cmd2 = cmd2 + '  outfile=outfile.fits hist=1::1 strict=yes clobber=yes'
-#     cmd  = cmd1 + cmd2
-#     bash(cmd,  env=ascdsenv)
-
-#     cmd1 = "/usr/bin/env PERL5LIB="
-#     cmd2 = ' dmlist infile=outfile.fits outfile=' + zspace + ' opt=data'
-#     cmd  = cmd1 + cmd2
-#     bash(cmd,  env=ascdsenv)
-
-#     data = mcf.read_data_file(zspace, remove=1)
-# #
-# #--- read bin # and its count rate
-# #
-#     hbin = []
-#     hcnt = []
-#     vsum = 0
-
-#     for ent in data:
-#         atemp = re.split('\s+|\t+', ent)
-#         if mcf.is_neumeric(atemp[0]):
-#             hbin.append(float(atemp[1]))
-#             val = int(atemp[4])
-#             hcnt.append(val)
-#             vsum += val
-
-#
-#--- checking one sigma and two sigma counts
-#
+    #
+    #-- make histgram
+    #-- checking one sigma and two sigma counts
+    #
     hcnt, bin_edges = HRCExp.fits_img_hist(fits)
     hbin = 0.5*(bin_edges[1:] + bin_edges[:-1])
     vsum = hcnt.sum()
@@ -289,29 +142,21 @@ def hrc_dose_extract_stat_data_month(year='NA', month='NA'):
         smonth = '0' + smonth
 
     for i in range(0,10):
-        ifile = data_s_dir +  'Cumulative/HRCS_08_1999_' + smonth + '_' 
-        ifile = ifile + syear + '_' + str(i) +  '.fits.gz'
-
-        out   = stat_s_dir + '/hrcs_' + str(i) + '_acc_out'
+        ifile = f'{HRCExp.data_s_dir}/Cumulative/HRCS_08_1999_{month:02d}_{year}_{i}.fits.gz'
+        out   = f'{HRCExp.stat_s_dir}/hrcs_{i}_acc_out'
         comp_stat(ifile, year, month, out)
 
-        ifile = data_s_dir  +  'Month/HRCS_' + smonth + '_' 
-        ifile = ifile + syear + '_' + str(i) +  '.fits.gz'
-
-        out   = stat_s_dir + '/hrcs_' + str(i) + '_dff_out'
+        ifile = f'{HRCExp.data_s_dir}/Month/HRCS_{month:02d}_{year}_{i}.fits.gz' 
+        out   = f'{HRCExp.stat_s_dir}/hrcs_{i}_dff_out'
         comp_stat(ifile, year, month, out)
 
     for i in range(0,9):
-        ifile = data_i_dir +  'Cumulative/HRCI_08_1999_' + smonth + '_' 
-        ifile = ifile + syear + '_' + str(i) +  '.fits.gz'
-
-        out   = stat_i_dir + '/hrci_' + str(i) + '_acc_out'
+        ifile = f'{HRCExp.data_i_dir}/Cumulative/HRCI_08_1999_{month:02d}_{year}_{i}.fits.gz'
+        out   = f'{HRCExp.stat_i_dir}/hrci_{i}_acc_out'
         comp_stat(ifile, year, month, out)
 
-        ifile = data_i_dir +  'Month/HRCI_' + smonth + '_' 
-        ifile = ifile + syear + '_' + str(i) +  '.fits.gz'
-
-        out   = stat_i_dir + '/hrci_' + str(i) + '_dff_out'
+        ifile = f'{HRCExp.data_i_dir}/Month/HRCI_{month:02d}_{year}_{i}.fits.gz' 
+        out   = f'{HRCExp.stat_i_dir}/hrci_{i}_dff_out'
         comp_stat(ifile, year, month, out)
 
 #--------------------------------------------------------------------------------------------------------

@@ -18,9 +18,9 @@ import fnmatch
 #
 #--- from ska
 #
-from Ska.Shell import getenv, bash
-ascdsenv = getenv('source /home/ascds/.ascrc -r release; \
-                   source /home/mta/bin/reset_param', shell='tcsh')
+#from Ska.Shell import getenv, bash
+#ascdsenv = getenv('source /home/ascds/.ascrc -r release; \
+#                   source /home/mta/bin/reset_param', shell='tcsh')
 #
 #--- reading directory list
 #
@@ -172,7 +172,8 @@ def hrc_dose_conv_to_png_manual(indir, outdir, outdir2, year, month, scale='sqrt
             cmd = cmd + ' -colorbar yes -colorbar vertical -colorbar numerics yes -colorbar space value '
             cmd = cmd + ' -colorbar fontsize 12  -saveimage png ' + outfile + ' -exit'
 
-            bash(cmd,  env=ascdsenv)
+            #bash(cmd,  env=ascdsenv)
+            os.system(cmd)
             cmd = 'cp -f ' + outfile + ' ' + outfile2
             os.system(cmd)
         else:

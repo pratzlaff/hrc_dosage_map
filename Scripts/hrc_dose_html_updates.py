@@ -15,6 +15,9 @@ import os
 import string
 import re
 import time
+
+import HRCExp
+
 #
 #--- reading directory list
 #
@@ -32,7 +35,7 @@ for ent in data:
 #
 sys.path.append(bin_dir)
 sys.path.append(mta_dir)
-import mta_common_functions     as mcf
+#import mta_common_functions     as mcf
 
 web_address = 'https://cxc.cfa.harvard.edu/contrib/cxchrc/HRC_Exposure/'
 
@@ -158,7 +161,7 @@ def create_html_page(data, hrc, sec, ctop):
 #
 #--- converting digit to letters, i.e. 1 to Jan
 #
-        cmonth = mcf.change_month_format(month[i])
+        cmonth = HRCExp.change_month_format(month[i])
 #
 #--- monthly HRC dose data
 #
@@ -237,7 +240,7 @@ def create_html_page(data, hrc, sec, ctop):
 #
     today = time.strftime('%Y:%m:%d', time.gmtime())
     atemp = re.split(':', today)
-    cmon  = mcf.change_month_format(int(float(atemp[1])))
+    cmon  = HRCExp.change_month_format(int(float(atemp[1])))
     today = cmon + ' ' + atemp[2] + ', ' + atemp[0]
 
     aline = aline + read_template('sub_footer').replace('#UPDATE#', today)
@@ -256,16 +259,13 @@ def update_main_html():
     input:  none, but read from <house_keeping>/exp_template
     output: <web_dir>/exposure.html
     """
-    today = time.strftime('%m:%d:%Y', time.gmtime())
-    atemp = re.split(':', today)
-    tyear = int(float(atemp[2]))
-    mon   = int(float(atemp[0]))
-    day   = int(float(atemp[1]))
+    year, mon, day = time.gmtime()[0:3]
+
 #
 #--- display date
 #
-    cmon  = mcf.change_month_format(mon)
-    today = cmon + ' ' + mcf.add_leading_zero(day) + ', ' + str(tyear)
+    cmon  = HRCExp.change_month_format(mon)
+    today = cmon + f' {day:02d} {year}'
 #
 #--- link date for the most recent plots
 #
@@ -307,7 +307,7 @@ def create_img_html(year='', month=''):
 #
 #--- if the year and month were not passed, set them to those of the last month
 #
-    if mcf.is_neumeric(year):
+    if HRCExp.is_neumeric(year):
         year  = int(float(year))
         month = int(float(month))
         if year < cyear:
@@ -335,9 +335,9 @@ def create_img_html(year='', month=''):
 #
 #--- set link dates
 #
-    ldate  = mcf.add_leading_zero(month)  + '_' + str(year)
-    pdate  = mcf.add_leading_zero(pmonth) + '_' + str(pyear)
-    ndate  = mcf.add_leading_zero(nmonth) + '_' + str(nyear)
+    ldate  = f'{month:02d}_{year}'
+    pdate  = f'{pmonth:02d}_{pyear}'
+    ndate  = f'{nmonth:02d}_{nyear}'
 
     monthly = read_template('mon_img_page')
     for  inst in ('S', 'I'):
@@ -399,7 +399,7 @@ def create_img_html(year='', month=''):
 #
             otemp = monthly
             otemp = otemp.replace("#YEAR#",    str(year))
-            otemp = otemp.replace("#MONTH#",   mcf.add_leading_zero(month))
+            otemp = otemp.replace("#MONTH#",   f'{month:02d}')
             otemp = otemp.replace("#INST#",    inst)
             otemp = otemp.replace("#SEC#",     str(sec))
             otemp = otemp.replace("#PNGLINK#", pnglink)
@@ -468,7 +468,7 @@ def create_img_html(year='', month=''):
 #
             otemp = cumulative
             otemp = otemp.replace("#YEAR#",    str(year))
-            otemp = otemp.replace("#MONTH#",   mcf.add_leading_zero(month))
+            otemp = otemp.replace("#MONTH#",   f'{month:02d}')
             otemp = otemp.replace("#INST#",    inst)
             otemp = otemp.replace("#SEC#",     str(sec))
             otemp = otemp.replace("#LATEST#",  ldate)
@@ -499,11 +499,11 @@ def read_stat_data(indir, inst):
             min_dpos,max_dff,max_dpos,dsig1, dsig2, dsig3]
     """
     ifile = indir +  inst + '_' + 'acc_out'
-    data  = mcf.read_data_file(ifile)
+    data  = HRCExp.read_data_file(ifile)
     save  = convert_to_columndata(data)
 
     ifile = indir +  inst + '_' + 'dff_out'
-    data  = mcf.read_data_file(ifile)
+    data  = HRCExp.read_data_file(ifile)
     save2 = convert_to_columndata(data)
 # 
 #--- odata contains:
@@ -525,13 +525,13 @@ def convert_to_columndata(data):
     output: save    --- a list of lists of data
     """
 
-    slen = len(re.split('\s+', data[0]))
+    slen = len(re.split(r'\s+', data[0]))
     save = []
     for k in range(0, slen):
         save.append([])
 
     for ent in data:
-        out = re.split('\s+', ent)
+        out = re.split(r'\s+', ent)
         for k in range(0, slen):
             try:
                 save[k].append(float(out[k]))
@@ -568,9 +568,9 @@ def find_last_entry_data():
     output: [<year>, <month>]
     """
     ifile = stat_i_dir + 'hrci_4_acc_out'
-    data  = mcf.read_data_file(ifile)
+    data  = HRCExp.read_data_file(ifile)
 
-    atemp = re.split('\s+', data[-1])
+    atemp = re.split(r'\s+', data[-1])
 
     return [atemp[0], atemp[1]]
 
