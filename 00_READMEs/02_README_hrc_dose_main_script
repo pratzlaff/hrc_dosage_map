@@ -2,7 +2,7 @@
 
 . ~/python3_venv/bin/activate
 
-true && {
+false && {
   basedir=`pwd`
   wwwdir=/data/wdocs/rpete/HRC_Exposure
   outdir=$basedir/outdir
@@ -14,6 +14,7 @@ true && {
   mkdir -p $wwwdir/{Image,Plots}/HRC{I,S}/{Cumulative,Month}
   mkdir -p $outdir/{i,s}/Exposure_map/{Data,Image}/{Cumulative,Month}
   mkdir -p $outdir/{i,s}/Exposure_map/Stats
+  cp -a Image/* $wwwdir/Image
 }
 
 cd Exc
