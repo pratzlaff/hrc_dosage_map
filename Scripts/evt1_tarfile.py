@@ -1,4 +1,6 @@
 import argparse
+import glob
+import os
 import subprocess
 import sys
 
@@ -11,14 +13,16 @@ def evt1_tarfile(year, month):
         sys.stderr.write("no obsids found\n")
         sys.exit(0)
 
-    files_i = [f'/data/hrc/i/{o:05d}/secondary/*evt1.fits*' for o in obsids[dets=='HRC-I']]
-    files_s = [f'/data/hrc/s/{o:05d}/secondary/*evt1.fits*' for o in obsids[dets=='HRC-S']]
+    tar_args = ['tar', 'cvf', f'evt1_{year}_{month:02d}.tar']
+    for i in range(obsids.size):
+        f = glob.glob(f'/data/hrc/*/{obsids[i]:05d}/secondary/*evt1.fits*')
+        if f:
+            tar_args.append(f[-1])
+        else:
+            sys.stderr.write(f'no EVT1 files found for obsid {obsids[i]:05d}\n')
 
-    files = [*files_i, *files_s]
-
-    tarfile = f'evt1_{year}_{month:02d}.tar'
-    tar_args = ['tar', 'cvf', tarfile, *files]
-    subprocess.run(tar_args, shell=True)
+    print(tar_args)
+    subprocess.run(tar_args)
 
 def main():
     parser = argparse.ArgumentParser(
