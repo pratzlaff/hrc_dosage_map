@@ -20,6 +20,9 @@ for ent in data:
     line = atemp[0].strip()
     exec("%s = %s" %(var, line))
 
+def fits2png(infile, outfile):
+    subprocess.run(['fitspng', '-l', '0,1', '-o', outfile, infile])
+
 def fits_read_raw(fname):
     """Return RAW coordinates from an events list, status-filtered for
     HRC.

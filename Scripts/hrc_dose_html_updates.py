@@ -148,7 +148,9 @@ def create_html_page(data, hrc, sec, ctop):
 #
 #---- cumulative HRC dose data
 #
-        aline += f'\
+
+        try:
+            aline += f'\
 <td>{mean_acc[i]:4.4f}</td>\
 <td>{std_acc[i]:4.4f}</td>\
 <td>{max_acc[i]:4.1f}</td>\
@@ -163,7 +165,9 @@ def create_html_page(data, hrc, sec, ctop):
 #            aline = aline + '<td><a href="' + HRCExp.data_s_dir + '/Cumulative/'
 #        aline = aline +  wname + '_' + smonth + '_' + str(syear) + '.fits.gz">fits</a></td>\n'
 
-        aline += f'<td><a href="{web_address}Image/{wname}/Cumulative/{wname}_08_1999_{month:02d}_{year}_{sec}.html">map</a></td>\n'
+            aline += f'<td><a href="{web_address}Image/{wname}/Cumulative/{wname}_08_1999_{month:02d}_{year}_{sec}.html">map</a></td>\n'
+        except:
+                aline += '<td>na</td>'*7 + '\n<td>na</td>\n'
 
 #
 #--- put header every new year so that we can read data easier
@@ -412,7 +416,6 @@ def create_img_html(year=None, month=None):
 #--- set output fine name
 #
             ofile = f'{odir}/HRC{inst}_08_1999_{ldate}_{sec}.html'
-            print(ofile)
             with open(ofile, 'w') as fo:
                 fo.write(otemp)
 

@@ -16,26 +16,11 @@
 import astropy.io.fits
 import numpy as np
 import os
-import re
 import shutil
 import sys
 import tempfile
 
 import HRCExp
-
-# #
-# #--- reading directory list
-# #
-# path = '/data/legs/rpete/flight/hrc_exposure_map/Scripts/house_keeping/dir_list'
-# f    = open(path, 'r')
-# data = [line.strip() for line in f.readlines()]
-# f.close()
-
-# for ent in data:
-#     atemp = re.split(':', ent)
-#     var  = atemp[1].strip()
-#     line = atemp[0].strip()
-#     exec("%s = %s" %(var, line))
 
 #
 #--- setting sections for subdividing image
@@ -121,7 +106,7 @@ def hrc_dose_get_data(year, month):
     for i in range(obsids.size):
         obsid = obsids[i]
         detector = insts[i]
-        archived=False
+        archived = False
         try:
             fitsName = HRCExp.find_local_evt1(obsid)
         except:
@@ -129,9 +114,10 @@ def hrc_dose_get_data(year, month):
                 fitsName = HRCExp.retrieve_archived_evt1(obsid)
                 archived=True
             except:
-                raise Exception(f'could not file EVT1 file for obsid {obsid:05d}')
+                sys.stderr.write(f'could not retrieve EVT1 file for obsid {obsid:05d}\n')
+                continue
 
-        sys.stderr.write("Processing: " + fitsName + ' : ' + detector+'\n')
+        sys.stderr.write(f'Processing: {fitsName} : {detector}\n')
         rawx, rawy = HRCExp.fits_read_raw(fitsName)
 
         if archived:
@@ -189,13 +175,13 @@ def hrc_dose_get_data(year, month):
                         shutil.copyfile(tmpfits, fits)
                     cnt[detector][i] += 1
 
-    for i in range(0, 10):    
+    for i in range(10):    
         if cnt['HRC-S'][i]:
             shutil.move(f'total_s{i}.fits', f'{HRCExp.data_s_dir}/Month/{outfile_s[i]}')
             os.system(f'gzip -f {HRCExp.data_s_dir}/Month/*.fits')
         createCumulative(year, month, 'HRC-S', HRCExp.data_s_dir, i)
 
-    for i in range(0, 9):    
+    for i in range(9):    
         if cnt['HRC-I'][i]:
             shutil.move(f'total_i{i}.fits', f'{HRCExp.data_i_dir}/Month/{outfile_i[i]}')
             os.system(f'gzip -f {HRCExp.data_i_dir}/Month/*.fits')
@@ -249,7 +235,10 @@ def createCumulative(year, month, detector, arch_dir, i):
     #--- if the monthly file does not exist, copy the last month's cumulative data
     #
     else:
-        shutil.copyfile(pfile, ofile)
+        try:
+            shutil.copyfile(pfile, ofile)
+        except:
+            pass
 
 #---------------------------------------------------------------------------------
 #-- make_month_list: create an appropriate month list for a given conditions  ----

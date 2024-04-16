@@ -11,39 +11,41 @@
 #################################################################################################
 
 import fnmatch
+import glob
 import os
 import re
+import shutil
 import string
 import sys
 
 import HRCExp
-#
-#--- from ska
-#
-#from Ska.Shell import getenv, bash
-#ascdsenv = getenv('source /home/ascds/.ascrc -r release; \
-#                   source /home/mta/bin/reset_param', shell='tcsh')
-#
-#--- reading directory list
-#
-path = '/data/legs/rpete/flight/hrc_exposure_map/Scripts/house_keeping/dir_list'
-with open(path, 'r') as f:
-    data = [line.strip() for line in f.readlines()]
 
-for ent in data:
-    atemp = re.split(':', ent)
-    var  = atemp[1].strip()
-    line = atemp[0].strip()
-    exec("%s = %s" %(var, line))
 #
-#--- append path to a privte folder
-#
-sys.path.append(bin_dir)
-sys.path.append(mta_dir)
-#
-#--- this convert fits files to image files
+#--- this converts FITS files to image files
 #
 import mta_convert_fits_to_image as mtaimg
+
+
+def fits2img(year, month, fdir, idir, wdir):
+    """Converts all year/month FITS images in fdir to PNG in idir,
+    then copying to wdir.
+    """
+    hname =  f'HRC*{month:02d}_{year}*.fits*'
+    files = glob.glob(f'{fdir}/HRC*{month:02d}_{year}*.fits*')
+    stem = [re.search(r'([^/]+)\.fits.*$', f).groups()[0] for f in files]
+    for i in range(len(files)):
+        oifile = f'{idir}/{stem[i]}.png'
+        owfile = f'{wdir}/{stem[i]}.png'
+        HRCExp.fits2png(files[i], oifile)
+        shutil.copyfile(oifile, owfile)
+
+def create_hrc_maps2(year, month):
+    for inst in ('i', 's'):
+        fdir = { 'i':HRCExp.data_i_dir, 's':HRCExp.data_s_dir }[inst]
+        idir = { 'i':HRCExp.img_i_dir, 's':HRCExp.img_s_dir }[inst]
+        wdir = { 'i':HRCExp.web_img_i_dir, 's':HRCExp.web_img_s_dir }[inst]
+        for subd in 'Month', 'Cumulative':
+            fits2img(year, month, f'{fdir}/{subd}/', f'{idir}/{subd}/', f'{wdir}/{subd}/')
 
 #--------------------------------------------------------------------------------------------
 #---  create_hrc_maps: create HRC image maps for given year and month                    ----
@@ -63,26 +65,22 @@ def create_hrc_maps(year, month, manual=0, chk=0):
 #--- image for sections for full images
 #
     for inst in ['Hrc_I', 'Hrc_S']:
-        if inst == 'Hrc_I':
-            bdir  = data_i_dir 
-            idir  = img_i_dir 
-            idir2 = web_img_i_dir
-        else:
-            bdir  = data_s_dir 
-            idir  = img_s_dir 
-            idir2 = web_img_s_dir
+
+        bdir = { 'Hrc_I':HRCExp.data_i_dir, 'Hrc_S':HRCExp.data_s_dir }[inst]
+        idir = { 'Hrc_I':HRCExp.img_i_dir, 'Hrc_S':HRCExp.img_s_dir }[inst]
+        idir2 = { 'Hrc_I':HRCExp.web_img_i_dir, 'Hrc_S':HRCExp.web_img_s_dir }[inst]
     
-        mdir  = bdir  + 'Month/'
-        odir  = idir  + 'Month/'
-        odir2 = idir2 + 'Month/'
+        mdir  = f'{bdir}/Month/'
+        odir  = f'{idir}/Month/'
+        odir2 = f'{idir2}Month/'
         if manual == 0:
             hrc_dose_conv_to_png(mdir, odir, year, month)
         else:
             hrc_dose_conv_to_png_manual(mdir, odir, odir2, year, month, chk=0)
 
-        cdir  = bdir  + 'Cumulative/'
-        odir  = idir  + 'Cumulative/'
-        odir2 = idir2 + 'Cumulative/'
+        cdir  = f'{bdir}/Cumulative/'
+        odir  = f'{idir}/Cumulative/'
+        odir2 = f'{idir2}/Cumulative/'
         if manual == 0:
             hrc_dose_conv_to_png(cdir, odir, year, month)
         else:
@@ -103,12 +101,8 @@ def hrc_dose_conv_to_png(indir, outdir, year, month):
     output: <img_dir>/<Inst>/<Month>/Hrc<inst>_<month>_<year>.png
             <img_dir>/<Inst>/<Month>/Hrc<inst>_08_1999_<month>_<year>.png
     """
-    syear = str(year)
-    smon  = str(month)
-    if month < 10:
-        smon = '0' + smon
 
-    hname =  'HRC*' + smon + '_' + syear + '*.fits*'
+    hname =  f'HRC*{month:02d}_{year}*.fits*'
 
     for ifile in os.listdir(indir):
 
@@ -118,13 +112,12 @@ def hrc_dose_conv_to_png(indir, outdir, year, month):
             out     = btemp[0]
             outfile = outdir + out
 
-            file_p  = indir + ifile
+            file_p  = f'{indir}/{ifile}'
 
             mtaimg.mta_convert_fits_to_image(file_p, outfile, 'linear', '125x125', 'sls', 'png')
-            cmd = 'convert -trim ' + outfile + '.png  ztemp.png'
+            cmd = f'convert -trim {outfile}.png  ztemp.png'
             os.system(cmd)
-            cmd = 'mv ztemp.png ' + outfile + '.png'
-            os.system(cmd)
+            shutil.move('ztemp.png', f'{outfile}.png')
         else:
             pass
 
@@ -146,12 +139,7 @@ def hrc_dose_conv_to_png_manual(indir, outdir, outdir2, year, month, scale='sqrt
     output: <img_dir>/<Inst>/<Month>/Hrc<inst>_<month>_<year>.png
             <img_dir>/<Inst>/<Month>/Hrc<inst>_08_1999_<month>_<year>.png
     """
-    syear = str(year)
-    smon  = str(month)
-    if month < 10:
-        smon = '0' + smon
-
-    hname =  f'HRC*' + smon + '_' + syear + '*.fits*'
+    hname =  f'HRC*{month:02d}_{year}*.fits*'
 
     for ifile in os.listdir(indir):
 
@@ -159,25 +147,22 @@ def hrc_dose_conv_to_png_manual(indir, outdir, outdir2, year, month, scale='sqrt
 
             btemp    = re.split(r'\.fits', ifile)
             out      = btemp[0]
-            outfile  = outdir  + out + '.png'
-            outfile2 = outdir2 + out + '.png'
+            outfile  = f'{outdir}/{out}.png'
+            outfile2  = f'{outdir2}/{out}.png'
 
-            ifits   = indir + ifile
+            ifits   = f'{indir}/{ifile}'
 
-            cmd = "/usr/bin/env PERL5LIB= "
-            cmd = cmd + ' ds9 ' + ifits + ' -geometry 760x1024 -zoom to fit '
+            cmd = f'ds9 {ifits} -geometry 760x1024 -zoom to fit '
             if chk > 0:
-                cmd = cmd + '-scale mode 99.5  -scale ' + scale  +' -cmap ' + color
+                cmd += f'-scale mode 99.5  -scale {scale} -cmap {color}'
             else:
-                cmd = cmd + '-scale ' + scale  +' -cmap ' + color
+                cmd += f'-scale {scale}  -cmap {color}'
 
-            cmd = cmd + ' -colorbar yes -colorbar vertical -colorbar numerics yes -colorbar space value '
-            cmd = cmd + ' -colorbar fontsize 12  -saveimage png ' + outfile + ' -exit'
+            cmd += ' -colorbar yes -colorbar vertical -colorbar numerics yes -colorbar space value '
+            cmd += f' -colorbar fontsize 12  -saveimage png {outfile} -exit'
 
-            #bash(cmd,  env=ascdsenv)
             os.system(cmd)
-            cmd = 'cp -f ' + outfile + ' ' + outfile2
-            os.system(cmd)
+            shutil.copyfile(outfile, outfile2)
         else:
             pass
 

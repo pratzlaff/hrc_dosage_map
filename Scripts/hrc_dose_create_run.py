@@ -68,7 +68,8 @@ def hrc_dose_create_run(year='', month=''):
 #   hrc_dose_create_image.hrc_dose_create_image(year, month)
 
     t0 = time.time()
-    hrc_dose_create_image.create_hrc_maps(year, month)
+    #hrc_dose_create_image.create_hrc_maps(year, month)
+    hrc_dose_create_image.create_hrc_maps2(year, month)
     sys.stderr.write(f'create_hrc_maps(): {time.time()-t0:.1f} seconds\n')
 
     t0 = time.time()
@@ -95,7 +96,7 @@ def hrc_dose_create_run(year='', month=''):
 #
 #--- send email to admin
 #
-    text = f'''
+    text = f'''\
 HRC Exposure maps for {year}/{month} were processed.
 You still need to run:
 /data/legs/rpete/flight/hrc_exposure_map/Scripts/hrc_dose_create_image.py {year} {month+1}

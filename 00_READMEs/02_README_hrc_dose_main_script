@@ -1,14 +1,8 @@
 #! /bin/bash
 
-. ~/.bash_aliases
-shopt -s expand_aliases
-
-# needed for mta_convert_fits_to_img
-ciao
-
 . ~/python3_venv/bin/activate
 
-false && {
+true && {
   basedir=`pwd`
   wwwdir=/data/wdocs/rpete/HRC_Exposure
   outdir=$basedir/outdir
@@ -24,4 +18,5 @@ false && {
 
 cd Exc
 python3 ../Scripts/hrc_dose_create_run.py 1999 8
-#python3 ../Scripts/hrc_dose_create_run.py 1999 9
+python3 ../Scripts/hrc_dose_create_run.py 1999 9
+python3 ../Scripts/hrc_dose_create_run.py 1999 10
