@@ -30,25 +30,25 @@ import matplotlib.lines as lines
 
 import HRCExp
 
-#
-#--- reading directory list
-#
-path = '/data/legs/rpete/flight/hrc_exposure_map/Scripts/house_keeping/dir_list'
-with open(path, 'r') as f:
-    data = [line.strip() for line in f.readlines()]
+# #
+# #--- reading directory list
+# #
+# path = '/data/legs/rpete/flight/hrc_exposure_map/Scripts/house_keeping/dir_list'
+# with open(path, 'r') as f:
+#     data = [line.strip() for line in f.readlines()]
 
-for ent in data:
-    atemp = re.split(':', ent)
-    var  = atemp[1].strip()
-    line = atemp[0].strip()
-    exec("%s = %s" %(var, line))
-#
-#--- append path to a private folder
-#
-sys.path.append(mta_dir)
-sys.path.append(bin_dir)
+# for ent in data:
+#     atemp = re.split(':', ent)
+#     var  = atemp[1].strip()
+#     line = atemp[0].strip()
+#     exec("%s = %s" %(var, line))
+# #
+# #--- append path to a private folder
+# #
+# sys.path.append(mta_dir)
+# sys.path.append(bin_dir)
 
-#import mta_common_functions     as mcf
+# #import mta_common_functions     as mcf
 
 #------------------------------------------------------------------------------------------------
 #--- hrc_dose_plot_exposure_stat: read hrc database, and plot history of exposure             ---
@@ -62,12 +62,12 @@ def hrc_dose_plot_exposure_stat():
     """
     for detector in ('hrci', 'hrcs'):
         if detector == 'hrcs':
-            indir  = stat_s_dir
-            outdir = plt_s_dir
+            indir  = HRCExp.stat_s_dir
+            outdir = HRCExp.plt_s_dir
             cstop  = 10
         else:
-            indir  = stat_i_dir
-            outdir = plt_i_dir
+            indir  = HRCExp.stat_i_dir
+            outdir = HRCExp.plt_i_dir
             cstop  = 9
 
         for section in range(0, cstop):
@@ -112,7 +112,7 @@ def read_hrc_stat_data(indir, inst, part):
     s2   = []
     s3   = []
 
-    ifile = indir + inst + '_' + part + '_out'
+    ifile = f'{indir}/{inst}_{part}_out'
     data  = HRCExp.read_data_file(ifile)
 
     for ent in data:

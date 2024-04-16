@@ -18,26 +18,9 @@ import time
 
 import HRCExp
 
-#
-#--- reading directory list
-#
-path = '/data/legs/rpete/flight/hrc_exposure_map/Scripts/house_keeping/dir_list'
-with open(path, 'r') as f:
-    data = [line.strip() for line in f.readlines()]
-
-for ent in data:
-    atemp = re.split(':', ent)
-    var  = atemp[1].strip()
-    line = atemp[0].strip()
-    exec("%s = %s" %(var, line))
-#
-#--- append path to a privte folder
-#
-sys.path.append(bin_dir)
-sys.path.append(mta_dir)
-#import mta_common_functions     as mcf
-
+web_address= 'https://hea-www.harvard.edu/~rpete/HRC_Exposure/'
 web_address = 'https://cxc.cfa.harvard.edu/contrib/cxchrc/HRC_Exposure/'
+web_address= 'file:///data/wdocs/rpete/HRC_Exposure/'
 
 #------------------------------------------------------------------------------------------------
 #--- hrc_dose_plot_exposure_stat: read hrc database, and plot history of exposure             ---
@@ -54,15 +37,11 @@ def hrc_dose_make_data_html():
 #
 #--- hrc i has 9 sections and hrc s has 10 sections
 #
-        if hrc == 'hrci':
-            cstop = 9
-            indir = stat_i_dir
-        else:
-            cstop = 10
-            indir = stat_s_dir
+        cstop = { 'hrci':9, 'hrcs':10 }[hrc]
+        indir = { 'hrci':HRCExp.stat_i_dir, 'hrcs':HRCExp.stat_s_dir }[hrc]
 
-        for sec in range(0, cstop):
-            hrc_sec = hrc + '_' + str(sec)
+        for sec in range(cstop):
+            hrc_sec = f'{hrc}_{sec}'
 #
 #--- a trend data file contains following columns:
 #---    year,month,mean_acc,std_acc,min_acc,min_apos, 
@@ -92,160 +71,122 @@ def create_html_page(data, hrc, sec, ctop):
     output: <web_dir>/Sub_html/<inst>_<sec>.html
     """
 #
-#--- today's date
+#--- start composing HTML page
 #
-    today = time.strftime('%Y:%m:%d', time.gmtime())
-    atemp = re.split(':', today)
-    year  = int(float(atemp[0]))
-    mon   = int(float(atemp[1]))
-    day   = int(float(atemp[2]))
+    aline  = read_template('sub_top1')
 
-    smon = str(mon)
-    if mon < 10:
-        smon = '0' + smon
+    hname = { 'hrci':'HRC I', 'hrcs':'HRC S' }[hrc]
+    wname = { 'hrci':'HRCI', 'hrcs':'HRCS' }[hrc]
+    inst = { 'hrci':'i', 'hrcs':'s' }[hrc]
 
-    sday = str(day)
-    if day < 10:
-        sday = '0' + sday
-#
-#--- start composing a html page
-#
-    aline  = read_template('sub_top1')    
-
-    if hrc == 'hrci':
-        hname = 'HRC I'
-        wname = 'HRCI'
-        inst  = 'i'
-    else:
-        hname = 'HRC S'
-        wname = 'HRCS'
-        inst  = 's'
-
-    aline = aline + '<title>' + hname + ' Section: ' + str(sec) + ' History Data</title>\n'
-    aline = aline + "</head>\n"
-
-    aline = aline + '<body style="color:white;background-color:black">\n'
-    aline = aline + '<div><a href="../hrc_exposure_map.html">Back to Top</a>\n'
-    aline = aline + '<h2 style="text-align:center">Data: ' + hname 
-    aline = aline + ' Section: ' + str(sec) +  '\n'
+    aline += f'''<title>{hname} Section: {sec} History Data</title>
+</head>
+<body style="color:white;background-color:black">
+<div><a href="../hrc_exposure_map.html">Back to Top</a>
+<h2 style="text-align:center">Data: {hname} Section: {sec}
+'''
 
     if sec == 0:
-        aline = aline + ' (<a href="./hrc' + inst + '_' + str(sec+1) + '.html">Next</a>)'
+        aline += f' (<a href="./hrc{inst}_{sec+1}.html">Next</a>)'
     elif sec == ctop-1:
-        aline = aline + ' (<a href="./hrc' + inst + '_' + str(sec-1) + '.html">Prev</a>)'
+        aline += f' (<a href="./hrc{inst}_{sec-1}.html">Prev</a>)'
     else:
-        aline = aline + ' (<a href="./hrc' + inst + '_' + str(sec-1) + '.html">Prev</a> : '
-        aline = aline + '<a href="./hrc' + inst + '_' + str(sec+1) + '.html">Next</a>)'
+        aline += f' (<a href="./hrc{inst}_{sec-1}.html">Prev</a> : <a href="./hrc{inst}_{sec+1}.html">Next</a>)'
 
-    aline = aline + '</h2>\n'
-
-    aline = aline + "<div style='padding-bottom:30px'>\n"
-    aline = aline + '<table border=1>\n'
-    aline = aline + read_template('sub_col_header')
+    aline += '''</h2>
+<div style='padding-bottom:30px'>
+<table border=1>
+'''
+    aline += read_template('sub_col_header')
 #
 #--- open the data to indivisual lists
 #
-    [year,month,mean_acc,std_acc,min_acc,min_apos, \
+    [years,months,mean_acc,std_acc,min_acc,min_apos, \
      max_acc,max_apos,asig1, asig2, asig3, mean_dff,std_dff,\
      min_dff, min_dpos,max_dff,max_dpos,dsig1, dsig2, dsig3] = data
 
-    dlen = len(year)
+    dlen = len(years)
+    for i in range(dlen):
 
-    for i in range(0, dlen):
+        month = int(months[i])
+        year = int(years[i])
 
-        smonth = str(int(month[i]))
-        if month[i] < 10:
-            smonth = '0' + smonth
-
-        syear = int(year[i])
-#
 #--- converting digit to letters, i.e. 1 to Jan
 #
-        cmonth = HRCExp.change_month_format(month[i])
+        cmonth = HRCExp.change_month_format(months[i])
 #
 #--- monthly HRC dose data
 #
         if mean_dff[i] == 0 and std_dff[i] == 0:
-            aline = aline + '<tr><td>%d</td><td>%d</td>' % (year[i], month[i])
-            aline = aline + read_template('sub_nodata')
+            aline += f'<tr><td>{year}</td><td>{month:02d}</td>' + read_template('sub_nodata')
         else:
-            aline = aline + '<tr><td>%d</td>' % year[i]
-            aline = aline + '<td>%d</td>'     % month[i]
-
+            aline += f'<tr><td>{year}</td><td>{month}</td>'
             try:
-                aline = aline + '<td>%4.4f</td>'  % mean_dff[i]
-                aline = aline + '<td>%4.4f</td>'  % std_dff[i]
-                #aline = aline + '<td>%4.1f</td>'  % min_dff[i]
-                #aline = aline + '<td>%s</td>'     % min_dpos[i]
-                aline = aline + '<td>%4.1f</td>'  % max_dff[i]
-                aline = aline + '<td>%s</td>'     % max_dpos[i]
-                aline = aline + '<td>%4.1f</td>'  % dsig1[i]
-                aline = aline + '<td>%s</td>'     % dsig2[i]
-                aline = aline + '<td>%4.1f</td>\n'% dsig3[i]
+                aline += f'\
+<td>{mean_dff[i]:4.4f}</td>\
+<td>{std_dff[i]:4.4f}</td>\
+<td>{max_dff[i]:4.1f}</td>\
+<td>{max_dpos[i]}</td>\
+<td>{dsig1[i]:4.1f}</td>\
+<td>{dsig2[i]}</td>\
+<td>{dsig3[i]:4.1f}</td>\n'
 
 #               if hrc == 'hrci':
-#                   aline = aline + '<td><a href="' + data_i_dir + '/Month/'
+#                   aline = aline + '<td><a href="' + HRCExp.data_i_dir + '/Month/'
 #               else:
-#                   aline = aline + '<td><a href="' + data_s_dir + '/Month/'
+#                   aline = aline + '<td><a href="' + HRCExp.data_s_dir + '/Month/'
 #               aline = aline +  wname + '_' + smonth + '_' + str(syear) + '.fits.gz">fits</a></td>\n'
 
-                aline = aline + '<td><a href="' + web_address + 'Image/' + wname + '/Month/'
-                aline = aline +  wname + '_' + smonth + '_' + str(syear) 
-                aline = aline +  '_' + str(sec) + '.html">map</a></td>\n'
+
+                aline += f'<td><a href="{web_address}Image/{wname}/Month/{wname}_{month:02d}_{year}_{sec}.html">map</a></td>\n'
             except:
 #
 #--- for the case there is no data, print 'na'
 #
-                aline = aline + '<td>na</td>'
-                aline = aline + '<td>na</td>'
-                aline = aline + '<td>na</td>'
-                aline = aline + '<td>na</td>'
-                aline = aline + '<td>na</td>'
-                aline = aline + '<td>na</td>'
-                aline = aline + '<td>na</td>\n'
-                aline = aline + '<td>na</td>\n'
+                aline += '<td>na</td>'*7 + '\n<td>na</td>\n'
+
 #
 #---- cumulative HRC dose data
 #
-        aline = aline + '<td>%4.4f</td>'    % mean_acc[i]
-        aline = aline + '<td>%4.4f</td>'    % std_acc[i]
-        #aline = aline + '<td>%4.1f</td>'    % min_acc[i]
-        #aline = aline + '<td>%s</td>'       % min_apos[i]
-        aline = aline + '<td>%4.1f</td>'    % max_acc[i]
-        aline = aline + '<td>%s</td>'       % max_apos[i]
-        aline = aline + '<td>%4.1f</td>'    % asig1[i]
-        aline = aline + '<td>%s</td>'       % asig2[i]
-        aline = aline + '<td>%4.1f</td>\n'  % asig3[i]
-
+        aline += f'\
+<td>{mean_acc[i]:4.4f}</td>\
+<td>{std_acc[i]:4.4f}</td>\
+<td>{max_acc[i]:4.1f}</td>\
+<td>{max_apos[i]}</td>\
+<td>{asig1[i]:4.1f}</td>\
+<td>{asig2[i]}</td>\
+<td>{asig3[i]:4.1f}</td>\n'
+  
 #        if hrc == 'hrci':
-#            aline = aline + '<td><a href="' + data_i_dir + '/Cumulative/'
+#            aline = aline + '<td><a href="' + HRCExp.data_i_dir + '/Cumulative/'
 #        else:
-#            aline = aline + '<td><a href="' + data_s_dir + '/Cumulative/'
+#            aline = aline + '<td><a href="' + HRCExp.data_s_dir + '/Cumulative/'
 #        aline = aline +  wname + '_' + smonth + '_' + str(syear) + '.fits.gz">fits</a></td>\n'
 
-        aline = aline + '<td><a href="' + web_address + 'Image/' + wname + '/Cumulative/'
-        aline = aline +  wname + '_08_1999_' + smonth + '_' + str(syear) + '_' + str(sec) +  '.html">map</a></td>\n'
+        aline += f'<td><a href="{web_address}Image/{wname}/Cumulative/{wname}_08_1999_{month:02d}_{year}_{sec}.html">map</a></td>\n'
 
 #
 #--- put header every new year so that we can read data easier
 #
-        if month[i] % 12 == 0 and i != (dlen-1):
-            aline = aline + read_template('sub_col_header')
+        if months[i] % 12 == 0 and i != (dlen-1):
+            aline += read_template('sub_col_header')
 
-    aline = aline + '</table>\n\n'
-    aline = aline + '<div style="padding_top:10px; padding_bottom:10px;">'
-    aline = aline + '<a href="../hrc_exposure_map.html">Back to Top</a>\n'
+    aline += '''\
+</table>
+
+<div style="padding_top:10px; padding_bottom:10px;"><a href="../hrc_exposure_map.html">Back to Top</a>
+'''
+
 #
 #--- add today's date as update date
 #
-    today = time.strftime('%Y:%m:%d', time.gmtime())
-    atemp = re.split(':', today)
-    cmon  = HRCExp.change_month_format(int(float(atemp[1])))
-    today = cmon + ' ' + atemp[2] + ', ' + atemp[0]
+    year, month, day = time.gmtime()[0:3]
+    month = HRCExp.change_month_format(month)
+    today = f'{month} {day}, {year}'
 
-    aline = aline + read_template('sub_footer').replace('#UPDATE#', today)
+    aline += read_template('sub_footer').replace('#UPDATE#', today)
 
-    outdir = web_dir + 'Sub_html/' + hrc + '_' + str(sec) +  '.html'
+    outdir = f'{HRCExp.web_dir}/Sub_html/{hrc}_{sec}.html'
     with open(outdir, 'w') as fo:
         fo.write(aline)
 
@@ -259,28 +200,24 @@ def update_main_html():
     input:  none, but read from <house_keeping>/exp_template
     output: <web_dir>/exposure.html
     """
-    year, mon, day = time.gmtime()[0:3]
-
 #
 #--- display date
 #
-    cmon  = HRCExp.change_month_format(mon)
-    today = cmon + f' {day:02d} {year}'
+    year, month, day = time.gmtime()[0:3]
+    month = HRCExp.change_month_format(month)
+    today = f'{month} {day}, {year}'
 #
 #--- link date for the most recent plots
 #
     [lyear, lmon] = find_last_entry_data()
 
-    smon  = float(lmon)
-    if smon < 10:
-        lmon = '0' + lmon
-    line = lmon + '_' + lyear
+    line = f'{int(lmon):02d}_{lyear}'
 
     data  = read_template('main_page')
     data  = data.replace('#LATEST#', line)
     data  = data.replace('#UPDATE#', today)
 
-    ofile = web_dir + 'hrc_exposure_map.html'
+    ofile = f'{HRCExp.web_dir}hrc_exposure_map.html'
     with open(ofile, 'w') as fo:
         fo.write(data)
 
@@ -288,7 +225,7 @@ def update_main_html():
 #-- create_img_html: create htmls to display exposure map                          --
 #------------------------------------------------------------------------------------
 
-def create_img_html(year='', month=''):
+def create_img_html(year=None, month=None):
     """
     create htmls to display exposure map.
     input:  year    --- year, if it is not given, the last month is used
@@ -299,25 +236,22 @@ def create_img_html(year='', month=''):
 #
 #--- find the current year/month
 #
-    atemp  = time.strftime('%Y:%m', time.gmtime())
-    [cyear, cmonth] = re.split(':', atemp)
-    cyear  = int(float(cyear))
-    cmonth = int(float(cmonth))
+    cyear, cmonth = time.gmtime()[0:2]
     chk = 0
 #
 #--- if the year and month were not passed, set them to those of the last month
 #
-    if HRCExp.is_neumeric(year):
-        year  = int(float(year))
-        month = int(float(month))
-        if year < cyear:
-            chk   = 1
-    else:
-        year  = cyear
-        month = cmonth -1
+    if not year:
+        year = cyear
+        month = cmonth-1
         if month < 1:
-            month = 12
             year -= 1
+            month = 12
+    else:
+        year = int(year)
+        month = int(month)
+        if year < cyear:
+            chk = 1
 #
 #--- set one month before and one month after
 #
@@ -341,19 +275,21 @@ def create_img_html(year='', month=''):
 
     monthly = read_template('mon_img_page')
     for  inst in ('S', 'I'):
-        if inst == 'S':
-            cstop = 10
-            odir  = web_img_s_dir + 'Month/'
-        else:
-            cstop = 9
-            odir  = web_img_i_dir + 'Month/'
 
-        for sec in range(0, cstop):
+        cstop = { 'I':9,
+                  'S':10
+                 }[inst]
+
+        odir = { 'I':HRCExp.web_img_i_dir,
+                 'S':HRCExp.web_img_s_dir
+                }[inst] + '/Month/'
+
+        for sec in range(cstop):
 #
 #--- create image file link
 #
-            png = 'HRC' + inst + '_' + ldate + '_' + str(sec) + '.png'
-            cpath = web_dir + 'Image/HRC' + inst + '/Month/' + png
+            png = f'HRC{inst}_{ldate}_{sec}.png'
+            cpath = f'{HRCExp.web_dir}Image/HRC{inst}/Month/{png}'
             if os.path.isfile(cpath):
                 pnglink = './' + png
             else:
@@ -361,44 +297,41 @@ def create_img_html(year='', month=''):
 #
 #--- create link paths
 #
-            pfile  = './HRC' + inst + '_' + pdate + '_' + str(sec)   + '.html'
-            nfile  = './HRC' + inst + '_' + ndate + '_' + str(sec)   + '.html'
-            psfile = './HRC' + inst + '_' + ldate + '_' + str(sec-1) + '.html'
-            nsfile = './HRC' + inst + '_' + ldate + '_' + str(sec+1) + '.html'
+            pfile = f'./HRC{inst}_{pdate}_{sec}.html'
+            nfile = f'./HRC{inst}_{ndate}_{sec}.html'
+            psfile = f'./HRC{inst}_{ldate}_{sec-1}.html'
+            nsfile = f'./HRC{inst}_{ldate}_{sec+1}.html'
 #
 #--- section link
 #
             if sec == 0:
-                seclink = '<a href="' + nsfile + '">Next Section</a><br />'
+                seclink = f'<a href="{nsfile}">Next Section</a><br />'
             elif sec == cstop-1:
-                seclink = '<a href="' + psfile + '">Prev Section</a><br />'
+                seclink = f'<a href="{psfile}">Prev Section</a><br />'
             else:
-                seclink = '<a href="' + psfile + '">Prev Section</a>  '
-                seclink = seclink + '<a href="' + nsfile + '">next Section</a><br />'
+                seclink = f'<a href="{psfile}">Prev Section</a>  <a href="{nsfile}">next Section</a><br />'
 #
 #--- time order link
 #
             if year == 1999 and month == 8:
-                tolink = '<a href="' + nfile + '">Next Month</a><br />'
+                tolink = f'<a href="{nfile}">Next Month</a><br />'
             elif chk == 0:
-                tolink = '<a href="' + pfile + '">Prev Month</a><br /> '
+                tolink = f'<a href="{pfile}">Prev Month</a><br /> '
             else:
-                tolink = '<a href="' + pfile + '">Prev Month</a>  '
-                tolink = tolink + '<a href="' + nfile + '">Next Month</a><br />'
+                tolink = f'<a href="{pfile}">Prev Month</a>  <a href="{nfile}">Next Month</a><br />'
 #
 #--- section main link
 #
-            sublink = '../../../Sub_html/hrc' + inst.lower() + '_' + str(sec) + '.html'
+            sublink = f'../../../Sub_html/hrc{inst.lower()}_{sec}.html'
 #
 #--- cumulative link
 #
-            cumlink = '<a href="../Cumulative/HRC' + inst + '_08_1999_' + ldate 
-            cumlink = cumlink + '_' + str(sec) + '.html">Cumulative Plot</a>' 
+            cumlink = f'<a href="../Cumulative/HRC{inst}_08_1999_{ldate}_{sec}.html">Cumulative Plot</a>'
 #
 #--- replace texts in the template
 #
             otemp = monthly
-            otemp = otemp.replace("#YEAR#",    str(year))
+            otemp = otemp.replace("#YEAR#",    f'{year}')
             otemp = otemp.replace("#MONTH#",   f'{month:02d}')
             otemp = otemp.replace("#INST#",    inst)
             otemp = otemp.replace("#SEC#",     str(sec))
@@ -411,7 +344,7 @@ def create_img_html(year='', month=''):
 #
 #--- set output fine name
 #
-            ofile = odir + 'HRC' + inst + '_' + ldate + '_' + str(sec) + '.html'
+            ofile = f'{odir}/HRC{inst}_{ldate}_{sec}.html'
             with open(ofile, 'w') as fo:
                 fo.write(otemp)
 #
@@ -419,58 +352,57 @@ def create_img_html(year='', month=''):
 #
     cumulative  = read_template('cum_img_page')
     for  inst in ('S', 'I'):
-        if inst == 'S':
-            cstop = 10
-            odir  = web_img_s_dir + 'Cumulative/'
-        else:
-            cstop = 9
-            odir  = web_img_i_dir + 'Cumulative/'
+        cstop = { 'I':9,
+                  'S':10
+                 }[inst]
 
-        for sec in range(0, cstop):
+        odir = { 'I':HRCExp.web_img_i_dir,
+                 'S':HRCExp.web_img_s_dir
+                }[inst] + '/Cumulative/'
+
+        for sec in range(cstop):
 #
 #--- create link paths
 #
-            pfile  = './HRC' + inst + '_08_1999_' + pdate + '_' + str(sec)   + '.html'
-            nfile  = './HRC' + inst + '_08_1999_' + ndate + '_' + str(sec)   + '.html'
-            psfile = './HRC' + inst + '_08_1999_' + ldate + '_' + str(sec-1) + '.html'
-            nsfile = './HRC' + inst + '_08_1999_' + ldate + '_' + str(sec+1) + '.html'
+            pfile = f'./HRC{inst}_08_1999_{pdate}_{sec}.html'
+            nfile = f'./HRC{inst}_08_1999_{ndate}_{sec}.html'
+            psfile = f'./HRC{inst}_08_1999_{ldate}_{sec-1}.html'
+            nsfile = f'./HRC{inst}_08_1999_{ldate}_{sec+1}.html'
 #
 #--- section link
 #
             if sec == 0:
-                seclink = '<a href="' + nsfile + '">next Section</a><br />'
+                seclink = f'<a href="{nsfile}">next Section</a><br />'
             elif sec == cstop-1:
-                seclink = '<a href="' + psfile + '">Prev Section</a><br />'
+                seclink = f'<a href="{psfile}">Prev Section</a><br />'
             else:
-                seclink = '<a href="' + psfile + '">Prev Section</a>  '
-                seclink = seclink + '<a href="' + nsfile + '">next Section</a><br />'
+                seclink = f'<a href="{psfile}">Prev Section</a>  <a href="{nsfile}">next Section</a><br />'
 #
 #--- time order link
 #
             if year == 1999 and month == 8:
-                tolink = '<a href="' + nfile + '">Next Month</a><br />'
+                tolink = f'<a href="{nfile}">Next Month</a><br />'
             elif chk == 0:
-                tolink = '<a href="' + pfile + '">Prev Month</a><br /> '
+                tolink = f'<a href="{pfile}">Prev Month</a><br /> '
             else:
-                tolink = '<a href="' + pfile + '">Prev Month</a>  '
-                tolink = tolink + '<a href="' + nfile + '">Next Month</a><br />'
+                tolink = f'<a href="{pfile}">Prev Month</a>  <a href="{nfile}">Next Month</a><br />'
 #
 #--- section main link
 #
-            sublink = '../../../Sub_html/hrc' + inst.lower() + '_' + str(sec) + '.html'
+            sublink = f'../../../Sub_html/hrc{inst.lower()}_{sec}.html'
 #
 #--- month link
 #
-            monlink = '<a href="../Month/HRC' + inst + '_' + ldate + '_' + str(sec) + '.html">'
+            monlink = f'<a href="../Month/HRC{inst}_{ldate}_{sec}.html">'
             monlink = monlink + 'Month Plot</a>' 
 #
 #--- replace texts in the template
 #
             otemp = cumulative
-            otemp = otemp.replace("#YEAR#",    str(year))
+            otemp = otemp.replace("#YEAR#",    f'{year}')
             otemp = otemp.replace("#MONTH#",   f'{month:02d}')
             otemp = otemp.replace("#INST#",    inst)
-            otemp = otemp.replace("#SEC#",     str(sec))
+            otemp = otemp.replace("#SEC#",     f'{sec}')
             otemp = otemp.replace("#LATEST#",  ldate)
             otemp = otemp.replace("#MONLINK#", monlink)
             otemp = otemp.replace("#SECLINK#", seclink)
@@ -479,10 +411,10 @@ def create_img_html(year='', month=''):
 #
 #--- set output fine name
 #
-            ofile = odir + 'HRC' + inst + '_08_1999_' + ldate + '_' + str(sec) + '.html'
+            ofile = f'{odir}/HRC{inst}_08_1999_{ldate}_{sec}.html'
+            print(ofile)
             with open(ofile, 'w') as fo:
                 fo.write(otemp)
-
 
 #------------------------------------------------------------------------------------
 #-- read_stat_data: read data from acis/hrc history data files                    ---
@@ -498,11 +430,11 @@ def read_stat_data(indir, inst):
             max_apos,asig1, asig2, asig3, mean_dff,std_dff,min_dff, \
             min_dpos,max_dff,max_dpos,dsig1, dsig2, dsig3]
     """
-    ifile = indir +  inst + '_' + 'acc_out'
+    ifile = f'{indir}{inst}_acc_out'
     data  = HRCExp.read_data_file(ifile)
     save  = convert_to_columndata(data)
 
-    ifile = indir +  inst + '_' + 'dff_out'
+    ifile = f'{indir}{inst}_dff_out'
     data  = HRCExp.read_data_file(ifile)
     save2 = convert_to_columndata(data)
 # 
@@ -538,7 +470,6 @@ def convert_to_columndata(data):
             except:
                 save[k].append(out[k])
 
-
     return save
 
 #------------------------------------------------------------------------------------
@@ -551,7 +482,7 @@ def read_template(part):
     input:  part    --- a file name which contain the template
     output: out     --- a text
     """
-    ifile = house_keeping + 'Templates/' + part
+    ifile = HRCExp.house_keeping + 'Templates/' + part
     with open(ifile, 'r') as f:
         out = f.read()
 
@@ -567,7 +498,7 @@ def find_last_entry_data():
     input: none, but read from <stat_i_dir>/hrci_4_acc_out
     output: [<year>, <month>]
     """
-    ifile = stat_i_dir + 'hrci_4_acc_out'
+    ifile = f'{HRCExp.stat_i_dir}/hrci_4_acc_out'
     data  = HRCExp.read_data_file(ifile)
 
     atemp = re.split(r'\s+', data[-1])
@@ -588,7 +519,7 @@ if __name__ == '__main__':
     else:
         hrc_dose_make_data_html()
         update_main_html()
-        create_img_html('','')
+        create_img_html()
 
 #    for year in range(1999, 2020):
 #        for mon in range(1, 13):

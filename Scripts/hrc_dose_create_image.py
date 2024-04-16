@@ -10,11 +10,13 @@
 #                                                                                               #
 #################################################################################################
 
-import sys
+import fnmatch
 import os
-import string
 import re
-import fnmatch 
+import string
+import sys
+
+import HRCExp
 #
 #--- from ska
 #
@@ -112,7 +114,7 @@ def hrc_dose_conv_to_png(indir, outdir, year, month):
 
         if fnmatch.fnmatch(ifile, hname):
 
-            btemp   = re.split('\.fits', ifile)
+            btemp   = re.split(r'\.fits', ifile)
             out     = btemp[0]
             outfile = outdir + out
 
@@ -149,13 +151,13 @@ def hrc_dose_conv_to_png_manual(indir, outdir, outdir2, year, month, scale='sqrt
     if month < 10:
         smon = '0' + smon
 
-    hname =  'HRC*' + smon + '_' + syear + '*.fits*'
+    hname =  f'HRC*' + smon + '_' + syear + '*.fits*'
 
     for ifile in os.listdir(indir):
 
         if fnmatch.fnmatch(ifile, hname):
 
-            btemp    = re.split('\.fits', ifile)
+            btemp    = re.split(r'\.fits', ifile)
             out      = btemp[0]
             outfile  = outdir  + out + '.png'
             outfile2 = outdir2 + out + '.png'

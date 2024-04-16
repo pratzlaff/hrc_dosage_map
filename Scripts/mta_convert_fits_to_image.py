@@ -10,33 +10,22 @@
 #                                                                                               #
 #################################################################################################
 
-import sys
+import glob
 import os
-import string
 import re
+import string
+import subprocess
+import sys
 import time
-import random
-#
-#--- from ska
-#
-#from Ska.Shell import getenv, bash
-#ascdsenv = getenv('source /home/ascds/.ascrc -r release', shell='tcsh')
-#
-#--- add mta common function
-#
-mta_dir = '/data/mta/Script/Python3.8/MTA/'
-sys.path.append(mta_dir)
+
 import HRCExp
-#
-rtail  = int(time.time() * random.random())
-zspace = '/tmp/zspace' + str(rtail)
 
 #----------------------------------------------------------------------------------------
 #-- mta_convert_fits_to_image: convert a fits img file to a ps, gif, jpg, or png file ---
 #----------------------------------------------------------------------------------------
 
-def mta_convert_fits_to_image(infile, outfile, scale = 'log', \
-                              size = '125x125', color = 'heat', itype = 'png'):
+def mta_convert_fits_to_image(infile, outfile, scale='log', \
+                              size = '125x125', color='heat', itype='png'):
     """
     convert a fits img file to a ps, gif, jpg, or png file 
     input:  infile  --- input fits file name
@@ -53,7 +42,8 @@ def mta_convert_fits_to_image(infile, outfile, scale = 'log', \
 #
 #--- set scale
 #
-    if (scale.lower() != 'log') and (scale.lower() != 'power'):
+    scale = scale.lower()
+    if scale not in ('log', 'power'):
         scale = 'linear'
 #
 #--- set default size
@@ -63,15 +53,9 @@ def mta_convert_fits_to_image(infile, outfile, scale = 'log', \
 #
 #--- read color list
 #
-    cmd  = 'ls /home/ascds/DS.release/data/*.lut > ' + zspace
-    os.system(cmd)
-    data = HRCExp.read_data_file(zspace)
+    color_list = [ re.search(r'(\w+).lut', f).groups()[0]
+                    for f in glob.glob(f'{os.environ["ASCDS_CALIB"]}/*.lut')]
 
-    color_list = []
-    for ent in data:
-        atemp = re.split(r'data\/', ent)
-        btemp = re.split(r'\.lut',  atemp[1])
-        color_list.append(btemp[0])
 #
 #--- make sure the color specified is in the list, if not, assign grey
 #
@@ -80,7 +64,8 @@ def mta_convert_fits_to_image(infile, outfile, scale = 'log', \
 #
 #--- set output format
 #
-    if not (itype.lower() in ['ps', 'gif', 'jpg', 'png']):
+    itype = itype.lower()
+    if itype not in ('ps', 'gif', 'jpg', 'png'):
         itype = 'gif'
 #
 #--- define output file name
@@ -89,23 +74,25 @@ def mta_convert_fits_to_image(infile, outfile, scale = 'log', \
 #
 #--- convert a fits image into an eps image
 #
-    cmd2 = 'dmimg2jpg ' + infile + ' greenfile="" bluefile="" regionfile="" '
-    cmd2 = cmd2 + 'outfile="foo.jpg" scalefunction="'+ scale 
-    cmd2 = cmd2 + '" psfile="foo.ps"  lut=")lut.'    + color + '" showgrid=no  clobber="yes"'
+    dmimg2jpg_args = ['dmimg2jpg',
+                      infile, 
+                      'greenfile=',
+                      'bluefile=',
+                      'regionfile=',
+                      'outfile=foo.jpg',
+                      f'scalefunction={scale}',
+                      'psfile=foo.ps',
+                      f'lut=)lut.{color}',
+                      'showgrid=no',
+                      'cl+'
+                      ]
+    subprocess.run(dmimg2jpg_args)
 
-    cmd1 = "/usr/bin/env PERL5LIB= "
-    cmd  = cmd1 + cmd2
-    bash(cmd,  env=ascdsenv)
 #
 #--- convert and move the image to the correct format and file name
 #
-    if itype == 'ps':
-        cmd = 'mv foo.ps ' + outfile
-        os.system(cmd)
-
-    elif itype == 'jpg':
-        cmd = 'mv foo.jpg ' + outfile
-        os.system(cmd)
+    if itype in ('ps', 'jpg'):
+        shutil.move(f'foo.{itype}', outfile)
 
     elif itype == 'gif':
         cmd = 'echo ""|gs -sDEVICE=ppmraw  -r' + size 
@@ -117,9 +104,13 @@ def mta_convert_fits_to_image(infile, outfile, scale = 'log', \
         cmd = 'echo ""|gs -sDEVICE=ppmraw  -r' + size 
         cmd = cmd + '  -q -dNOPAUSE -sOutputFile=-  ./foo.ps |' 
         cmd = cmd +  'pnmtopng > ' + outfile
+
         os.system(cmd)
 
-    os.system('rm foo.*')
+    try:
+        [ os.unlink(f) for f in glob.glob('foo.*') ]
+    except:
+        pass
 
 #--------------------------------------------------------------------------------------------
 

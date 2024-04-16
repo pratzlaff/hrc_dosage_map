@@ -17,11 +17,11 @@ import string
 import sys
 import time
 
-import hrc_dose_get_data            as hdgd         #--- extract data
-import hrc_dose_create_image        as hdci         #--- create png files
-import hrc_dose_stat_data           as hdsd         #--- compute statistics
-import hrc_dose_html_updates        as hdhu         #--- update html pages
-import hrc_dose_plot_exposure_stat  as hdpes        #--- create stat plot
+import hrc_dose_get_data            #--- extract data
+import hrc_dose_create_image        #--- create png files
+import hrc_dose_stat_data           #--- compute statistics
+import hrc_dose_html_updates        #--- update html pages
+import hrc_dose_plot_exposure_stat  #--- create stat plot
 
 import HRCExp
 
@@ -61,35 +61,27 @@ def hrc_dose_create_run(year='', month=''):
 #
 
     t0 = time.time()
-    hdgd.hrc_dose_get_data(year, month)
+    hrc_dose_get_data.hrc_dose_get_data(year, month)
     t1 = time.time()
-    print(f'hrc_dose_get_data(): {t1-t0} seconds')
+    sys.stderr.write(f'hrc_dose_get_data(): {t1-t0:.1f} seconds\n')
 
-#   hdci.hrc_dose_create_image(year, month)
-
-    t0 = time.time()
-    #hdci.create_hrc_maps(year, month)
-    print(f'create_hrc_maps(): {time.time()-t0:.1f} seconds')
+#   hrc_dose_create_image.hrc_dose_create_image(year, month)
 
     t0 = time.time()
-    hdsd.hrc_dose_extract_stat_data_month(year, month)
-    print(f'hrc_dose_extract_stat_data_month(): {time.time()-t0:.1f} seconds')
+    hrc_dose_create_image.create_hrc_maps(year, month)
+    sys.stderr.write(f'create_hrc_maps(): {time.time()-t0:.1f} seconds\n')
 
     t0 = time.time()
-    hdpes.hrc_dose_plot_exposure_stat()
-    print(f'hrc_dose_plot_exposure_stat(): {time.time()-t0:.1f} seconds')
+    hrc_dose_stat_data.hrc_dose_extract_stat_data_month(year, month)
+    sys.stderr.write(f'hrc_dose_extract_stat_data_month(): {time.time()-t0:.1f} seconds\n')
 
     t0 = time.time()
-    hdhu.hrc_dose_make_data_html()
-    print(f'hrc_dose_make_data_html(): {time.time()-t0:.1f} seconds')
+    hrc_dose_plot_exposure_stat.hrc_dose_plot_exposure_stat()
+    sys.stderr.write(f'hrc_dose_plot_exposure_stat(): {time.time()-t0:.1f} seconds\n')
 
-    t0 = time.time()
-    hdhu.update_main_html()
-    print(f'update_main_html(): {time.time()-t0:.1f} seconds')
-
-    t0 = time.time()
-    hdhu.create_img_html('','')
-    print(f'create_img_html(): {time.time()-t0:.1f} seconds')
+    hrc_dose_html_updates.hrc_dose_make_data_html()
+    hrc_dose_html_updates.update_main_html()
+    hrc_dose_html_updates.create_img_html()
 #
 #--- update the date links of the image html page of the one month before the current ones
 #
@@ -98,17 +90,16 @@ def hrc_dose_create_run(year='', month=''):
     if lmonth < 1:
         lmonth = 12
         lyear -= 1
-    hdhu.create_img_html(lyear, lmonth)
+    hrc_dose_html_updates.create_img_html(lyear, lmonth)
 
-    # cmd = 'rm -rf *fits zout'
-    # os.system(cmd)
 #
 #--- send email to admin
 #
-    text = f'HRC Exposure maps for {year}/{month} were processed.\n\
-You still need to run:\n\
-/data/legs/rpete/flight/hrc_exposure_map/Scripts/hrc_dose_create_image.py {year} {month+1}\n\
-'
+    text = f'''
+HRC Exposure maps for {year}/{month} were processed.
+You still need to run:
+/data/legs/rpete/flight/hrc_exposure_map/Scripts/hrc_dose_create_image.py {year} {month+1}
+'''
     global admin
     HRCExp.send_email(admin, text)
 

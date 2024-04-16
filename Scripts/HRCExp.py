@@ -215,38 +215,21 @@ def read_ocat():
                     years.append(int(m.groups()[1]))
     return np.array(obsids), np.array(years), np.array(months), np.array(inst)
 
-#--------------------------------------------------------------------------
-#-- is_neumeric: checking the input is neumeric value                    --
-#--------------------------------------------------------------------------
-
-def is_neumeric(val):
-    """
-    checking the input is neumeric value
-    input:  val --- input value
-    output: True/False
-    """
-
-    try:
-        var = float(val)
-        return True
-    except:
-        return False
-
 def year_month_obsids(year, month):
     obsids, years, months, insts = read_ocat()
     mask = (years==year) & (months==month) & ((insts=='HRC-I')|(insts=='HRC-S'))
     return obsids[mask], insts[mask]
 
 def retrieve_archived_evt1(obsid):
-    input = f'\
-operation=retrieve\n\
-dataset=flight\n\
-obsid={obsid:05d}\n\
-detector=hrc\n\
-filetype=evt1\n\
-level=1\n\
-go\n\
-'
+    input = f'''
+operation=retrieve
+dataset=flight
+obsid={obsid:05d}
+detector=hrc
+filetype=evt1
+level=1
+go
+'''
     p = subprocess.Popen(
         ['/proj/axaf/simul/bin/arc5gl', '-stdin'],
         stdin=subprocess.PIPE,
