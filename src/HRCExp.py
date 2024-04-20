@@ -64,7 +64,7 @@ def mk_zero_expmaps():
         for i in range(len(subraw[det]['x'][0])):
             nx = subraw[det]['x'][1][i] - subraw[det]['x'][0][i] + 1
             ny = subraw[det]['y'][1][i] - subraw[det]['y'][0][i] + 1
-            expmaps[det].append(np.zeros((ny, nx), dtype=int))
+            expmaps[det].append(np.zeros((ny, nx), dtype=np.int32))
     return expmaps
 
 def mkdir_p(path):
