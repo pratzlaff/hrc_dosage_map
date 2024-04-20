@@ -9,6 +9,5 @@
 '/data/wdocs/rpete/HRC_Exposure/'             :web_dir
 '/data/wdocs/rpete/HRC_Exposure/Image/HRCI/'  :web_img_i_dir
 '/data/wdocs/rpete/HRC_Exposure/Image/HRCS/'  :web_img_s_dir
-'/data/wdocs/rpete/HRC_Exposure/Plots/HRCS/'  :plt_s_dir
-'/data/wdocs/rpete/HRC_Exposure/Plots/HRCI/'  :plt_i_dir
+'/data/wdocs/rpete/HRC_Exposure/Plots/'  :plt_dir
 '/data/mta/Script/Python3.8/MTA/'                               :mta_dir

@@ -20,59 +20,40 @@ import re
 #
 import matplotlib as mpl
 
-if __name__ == '__main__':
-    mpl.use('Agg')
+# if __name__ == '__main__':
+#     mpl.use('Agg')
 
 from pylab import *
 import matplotlib.pyplot as plt
 import matplotlib.font_manager as font_manager
 import matplotlib.lines as lines
 
+plt.rcParams['axes.titley'] = 1.0    # y is in axes-relative coordinates.
+plt.rcParams['axes.titlepad'] = -14  # pad is in points...
+
 import HRCExp
-
-# #
-# #--- reading directory list
-# #
-# path = '/data/legs/rpete/flight/hrc_exposure_map/Scripts/house_keeping/dir_list'
-# with open(path, 'r') as f:
-#     data = [line.strip() for line in f.readlines()]
-
-# for ent in data:
-#     atemp = re.split(':', ent)
-#     var  = atemp[1].strip()
-#     line = atemp[0].strip()
-#     exec("%s = %s" %(var, line))
-# #
-# #--- append path to a private folder
-# #
-# sys.path.append(mta_dir)
-# sys.path.append(bin_dir)
-
-# #import mta_common_functions     as mcf
 
 #------------------------------------------------------------------------------------------------
 #--- hrc_dose_plot_exposure_stat: read hrc database, and plot history of exposure             ---
 #------------------------------------------------------------------------------------------------
 
-def hrc_dose_plot_exposure_stat():
+def hrc_dose_plot_exposure_stat(pdir=None):
     """
     read hrc database, and plot history of exposure. 
     input:  none, but read from <stat_i_dir> and <stat_s_dir>
     output: <plt_i_dir>/xxxx.png   <plt_s_dir>/xxxx.png
     """
     for detector in ('hrci', 'hrcs'):
-        if detector == 'hrcs':
-            indir  = HRCExp.stat_s_dir
-            outdir = HRCExp.plt_s_dir
-            cstop  = 10
-        else:
-            indir  = HRCExp.stat_i_dir
-            outdir = HRCExp.plt_i_dir
-            cstop  = 9
 
-        for section in range(0, cstop):
-            inst  = detector + '_' + str(section)
-            ofile = outdir + inst + '.png'
+        cstop = { 'hrci':9, 'hrcs':10 }[detector]
+        indir = { 'hrci':HRCExp.stat_i_dir, 'hrcs':HRCExp.stat_s_dir }[detector]
+        if pdir:
+            outdir = { 'hrci':f'{pdir}/HRCI', 'hrcs':f'{pdir}/HRCS' }[detector]
+
+        for section in range(cstop):
+            inst = f'{detector}_{section}'
+            if outdir:
+                ofile = f'{outdir}/{inst}.png'
 #
 #--- data list: [date, mean, min, max, std1, std2, std3]
 #
@@ -81,10 +62,11 @@ def hrc_dose_plot_exposure_stat():
 #
 #--- plot data
 #
-            try:
-                plot_hrc_dose(acc_data, dff_data, ofile)
-            except:
-                pass
+            plot_hrc_dose(acc_data, dff_data, ofile)
+            # try:
+            #     plot_hrc_dose(acc_data, dff_data, ofile)
+            # except:
+            #     pass
 
 #------------------------------------------------------------------------------------------------
 #-- read_hrc_stat_data: read hrc stat data                                                     --
@@ -123,7 +105,7 @@ def read_hrc_stat_data(indir, inst, part):
         mc  = re.search('na', str(ent).lower())
         if mc is not None:
             atemp = re.split(r'\s+', ent)
-            time  = float(atemp[0]) + float(atemp[1])/12.0 + 0.5
+            time  = float(atemp[0]) + (float(atemp[1])-0.5)/12
             date.append(time)
             avg.append(0)
             smin.append(0)
@@ -136,7 +118,7 @@ def read_hrc_stat_data(indir, inst, part):
 #
         else:
             atemp = re.split(r'\s+', ent)
-            time  = float(atemp[0]) + float(atemp[1])/12.0 + 0.5
+            time  = float(atemp[0]) + (float(atemp[1])-0.5)/12
             date.append(time)
             avg.append(float(atemp[2]))
             smin.append(float(atemp[4]))
@@ -179,11 +161,11 @@ def plot_hrc_dose(acc_data, dff_data, ofile):
 #
 #---- set a few parameters
 #
-    plt.close('all')
-    mpl.rcParams['font.size'] = 9
-    props = font_manager.FontProperties(size=6)
-    plt.subplots_adjust(hspace=0.05)
-    plt.subplots_adjust(wspace=0.12)
+    # plt.close('all')
+    # mpl.rcParams['font.size'] = 9
+    # props = font_manager.FontProperties(size=6)
+    # plt.subplots_adjust(hspace=0.05)
+    # plt.subplots_adjust(wspace=0.12)
 #
 #--- mean
 #
@@ -238,9 +220,10 @@ def plot_hrc_dose(acc_data, dff_data, ofile):
 #
 #--- save the plot in png format
 #   
-    plt.savefig(ofile, format='png', dpi=200)
+    plt.show()
+    plt.savefig(ofile, format='png')#, dpi=200)
 
-    plt.close('all')
+    plt.close()
 
 #------------------------------------------------------------------------------------------------
 #---   plot_panel: plotting each panel for a given "ax"                                       ---
@@ -254,7 +237,7 @@ def plot_panel(x, y, label, ax):
             y       --- a list of y values
             label   --- title label
             ax      ---designation of the plot
-    output: a trend plot on pnael <ax>
+    output: a trend plot on panel <ax>
     """
 #
 #--- x axis setting: here we assume that x is already sorted
@@ -282,17 +265,19 @@ def plot_panel(x, y, label, ax):
 #--- setting panel 
 #
 
-    ax.set_autoscale_on(False)         #---- these three may not be needed for the new pylab, but 
-    ax.set_xbound(xmin,xmax)           #---- they are necessary for the older version to set
+    # ax.set_autoscale_on(False)         #---- these three may not be needed for the new pylab, but 
+    # ax.set_xbound(xmin,xmax)           #---- they are necessary for the older version to set
 
-    ax.set_xlim(xmin=xmin, xmax=xmax, auto=False)
-    ax.set_ylim(ymin=ymin, ymax=ymax, auto=False)
+    # ax.set_xlim(xmin=xmin, xmax=xmax, auto=False)
+    # ax.set_ylim(ymin=ymin, ymax=ymax, auto=False)
 #
 #--- plot line
 #
-    plt.plot(x, y, color='blue', lw=1, marker='+', markersize=1.5)
 
-    plt.text(xbot, ytop, label)
+    plt.plot(x, y, color='blue', lw=1, marker='+', markersize=1.5)
+    plt.title(label)
+
+    #plt.text(xbot, ytop, label)
 
 #------------------------------------------------------------------------------------------------
 #-- plot_panel2: plotting each panel for a given "ax" with three data sets                     --
@@ -335,19 +320,18 @@ def plot_panel2(x, s1, s2, s3, labels, ax):
 #
 #--- setting panel 
 #
-    ax.set_autoscale_on(False)         #---- these three may not be needed for the new pylab, but 
-    ax.set_xbound(xmin,xmax)           #---- they are necessary for the older version to set
+    # ax.set_autoscale_on(False)         #---- these three may not be needed for the new pylab, but 
+    # ax.set_xbound(xmin,xmax)           #---- they are necessary for the older version to set
 
-    ax.set_xlim(xmin=xmin, xmax=xmax, auto=False)
-    ax.set_ylim(ymin=ymin, ymax=ymax, auto=False)
+    # ax.set_xlim(xmin=xmin, xmax=xmax, auto=False)
+    # ax.set_ylim(ymin=ymin, ymax=ymax, auto=False)
 #
 #--- plot line
 #
-    p1, = plt.plot(x, s1, color='blue',  lw=1, marker='', markersize=0.0)
-    p2, = plt.plot(x, s2, color='green', lw=1, marker='', markersize=0.0)
-    p3, = plt.plot(x, s3, color='orange',lw=1, marker='', markersize=0.0)
-
-    legend([p1, p2, p3], [labels[0], labels[1], labels[2]], loc=2, fontsize=9)
+    plt.plot(x, s1, 'b-', label=labels[0])
+    plt.plot(x, s2, 'g-', label=labels[1])
+    plt.plot(x, s3, '-', color='orange', label=labels[2])
+    legend(loc='upper left')
 
 #------------------------------------------------------------------------------------
 #------------------------------------------------------------------------------------
@@ -366,4 +350,4 @@ def find_magnitude(val):
 
 if __name__ == '__main__':
 
-    hrc_dose_plot_exposure_stat()
+    hrc_dose_plot_exposure_stat(HRCExp.plt_dir)

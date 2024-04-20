@@ -60,24 +60,24 @@ def hrc_dose_create_run(year='', month=''):
 #--- run scripts
 #
 
-    t0 = time.time()
-    hrc_dose_get_data.hrc_dose_get_data(year, month)
-    t1 = time.time()
-    sys.stderr.write(f'hrc_dose_get_data(): {t1-t0:.1f} seconds\n')
+#     t0 = time.time()
+#     hrc_dose_get_data.hrc_dose_get_data(year, month)
+#     t1 = time.time()
+#     sys.stderr.write(f'hrc_dose_get_data(): {t1-t0:.1f} seconds\n')
 
-#   hrc_dose_create_image.hrc_dose_create_image(year, month)
+# #   hrc_dose_create_image.hrc_dose_create_image(year, month)
 
-    t0 = time.time()
-    #hrc_dose_create_image.create_hrc_maps(year, month)
-    hrc_dose_create_image.create_hrc_maps2(year, month)
-    sys.stderr.write(f'create_hrc_maps(): {time.time()-t0:.1f} seconds\n')
+#     t0 = time.time()
+#     #hrc_dose_create_image.create_hrc_maps(year, month)
+#     hrc_dose_create_image.create_hrc_maps2(year, month)
+#     sys.stderr.write(f'create_hrc_maps(): {time.time()-t0:.1f} seconds\n')
 
     t0 = time.time()
     hrc_dose_stat_data.hrc_dose_extract_stat_data_month(year, month)
     sys.stderr.write(f'hrc_dose_extract_stat_data_month(): {time.time()-t0:.1f} seconds\n')
 
     t0 = time.time()
-    hrc_dose_plot_exposure_stat.hrc_dose_plot_exposure_stat()
+    hrc_dose_plot_exposure_stat.hrc_dose_plot_exposure_stat(HRCExp.plt_dir)
     sys.stderr.write(f'hrc_dose_plot_exposure_stat(): {time.time()-t0:.1f} seconds\n')
 
     hrc_dose_html_updates.hrc_dose_make_data_html()
