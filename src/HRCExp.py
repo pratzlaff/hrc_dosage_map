@@ -1,4 +1,5 @@
 import astropy.io.fits
+import errno
 import glob
 import numpy as np
 import os
@@ -19,6 +20,61 @@ for ent in data:
     var  = atemp[1].strip()
     line = atemp[0].strip()
     exec("%s = %s" %(var, line))
+
+# #
+# #--- setting sections for subdividing image
+# #
+# RAWX0 = {
+#     'HRC-S' : [0 for i in range(10)],
+#     'HRC-I' : (   1,    1,     1,  5462,  5462,  5462, 10924, 10924, 10924),
+# }
+# RAWX1 = {
+#     'HRC-S' : [4095 for i in range(10)],
+#     'HRC-I' : (5461, 5461 , 5461, 10923, 10923, 10923, 16385, 16385, 16385),
+# }
+# RAWY0 = {
+#     'HRC-S' : (   1, 4916,  9832, 14748, 19664, 24580, 29496, 34412, 39328, 44244),
+#     'HRC-I' : (   1, 5462, 10924,     1,  5462, 10924,     1,  5562, 10942),
+# }
+# RAWY1 = {
+#     'HRC-S' : (4915, 9831, 14747, 19663, 24579, 29495, 34411, 39327, 44243, 49159),
+#     'HRC-I' : (5461,10923, 16385,  5461, 10923, 16385,  5461, 10923, 16385),
+# }
+subraw = {
+    's' : { 'x':[[0]*10,
+                 [4095]*10
+                 ],
+            'y':[[1,4916,9832,4748,19664,24580,29496,34412,39328,44244],
+                 [4915,9831,14747,19663,24579,29495,34411,39327,44243,49159]
+                 ]
+           },
+    'i' : { 'x':[[1,1,1,5462,5462,5462,10924,10924,10924],
+                 [5461,5461,5461,10923,10923,10923,16385,16385,16385]
+                 ],
+            'y':[[1,5462,10924,1,5462,10924,1,5562,10942],
+                 [5461,10923,16385,5461,10923,16385,5461,10923,16385]
+                 ]
+           }
+}
+
+def mk_zero_expmaps():
+    expmaps = { }
+    for det in subraw:
+        expmaps[det] = []
+        for i in range(len(subraw[det]['x'][0])):
+            nx = subraw[det]['x'][1][i] - subraw[det]['x'][0][i] + 1
+            ny = subraw[det]['y'][1][i] - subraw[det]['y'][0][i] + 1
+            expmaps[det].append(np.zeros((ny, nx), dtype=int))
+    return expmaps
+
+def mkdir_p(path):
+    try:
+        os.makedirs(path)
+    except OSError as exc:
+        if exc.errno == errno.EEXIST and os.path.isdir(path):
+            pass
+        else:
+            raise
 
 def fits2png(infile, outfile):
     subprocess.run(['fitspng', '-l', '0,1', '-o', outfile, infile])
@@ -42,7 +98,7 @@ def raw_hist(rawx, rawy, x0, x1, y0, y1):
     nx = x1-x0+1
     ny = y1-y0+1
     h, yedge, xedge = np.histogram2d(rawy[mask], rawx[mask], bins=(ny, nx), range=[[y0-0.5,y1+0.5],[x0-0.5,x1+0.5]])
-    return h
+    return h.astype(int)
 
 def fits_img_hist(fname):
     with astropy.io.fits.open(fname) as hdul:
