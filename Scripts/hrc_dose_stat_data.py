@@ -37,32 +37,33 @@ def comp_stat(ifile, year, month, ofile):
     if os.path.isfile(ifile):
         out = HRCExp.stats(ifile)
         if out[3]>0:
-            (sig1, sig2, sig3) = find_sigma_values(ifile)
-
+            sig1, sig2, sig3 = find_sigma_values(ifile)
         else:
-            out = ('NA','NA','NA','NA','NA','NA','NA','NA')
-            (sig1, sig2, sig3) = ('NA', 'NA', 'NA')
+            out = ('NA',)*8
+            sig1, sig2, sig3 = ('NA',)*3
 
     else:
-        out = ('NA','NA','NA','NA','NA','NA','NA','NA')
-        (sig1, sig2, sig3) = ('NA', 'NA', 'NA')
+        out = ('NA',)*8
+        sig1, sig2, sig3 = ('NA',)*3
 #
 #--- print out the results
 #
     if out[0] == 'NA':
-        line = '%d\t%d\t' % (year, month)
-        line =  line + 'NA\tNA\tNA\tNA\tNA\tNA\tNA\tNA\tNA\n'
+        line = '\t'.join([f'{year}', f'{month}', *['NA']*9]) + '\n'
     else:
-        line = '%d\t%d\t' % (year, month)
-        line = line +  '%5.6f\t'   % float(out[0])
-        line = line +  '%5.6f\t'   % float(out[1])
-        line = line +  '%5.1f\t'   % float(out[2])
-        line = line +  '(%d,%d)\t' % (float(out[4]), float(out[5]))
-        line = line +  '%5.1f\t'   % float(out[3])
-        line = line +  '(%d,%d)\t' % (float(out[6]), float(out[7]))
-        line = line +  '%5.1f\t'   % float(sig1)
-        line = line +  '%5.1f\t'   % float(sig2)
-        line = line +  '%5.1f\n'   % float(sig3)
+        line = '\t'.join([
+            f'{year}',
+            f'{month}',
+            f'{out[0]:5.6f}',
+            f'{out[1]:5.6f}',
+            f'{out[2]:5.1f}',
+            f'({out[4]:.0f},{out[5]:.0f})',
+            f'{out[3]:5.1f}',
+            f'({out[6]:.0f},{out[7]:.0f})',
+            f'{sig1:5.1f}',
+            f'{sig2:5.1f}',
+            f'{sig3:5.1f}',
+        ]) + '\n'
 
     if os.path.isfile(ofile):
         with open(ofile, 'a') as fo:
@@ -70,7 +71,6 @@ def comp_stat(ifile, year, month, ofile):
     else:
         with open(ofile, 'w') as fo:
             fo.write(line)
-
 
 #------------------------------------------------------------------------------------------
 #-- find_sigma_values: find 2 sigma, 3sigma, and 4 sigma values of the given data        --
@@ -121,7 +121,7 @@ def find_sigma_values(fits):
 #--- hrc_dose_extract_stat_data_month: compute HRC statistics                           ---
 #------------------------------------------------------------------------------------------
 
-def hrc_dose_extract_stat_data_month(year='NA', month='NA'):
+def hrc_dose_extract_stat_data_month(year=None, month=None):
     """
     compute HRC statistics
     input   year    --- year
@@ -129,18 +129,10 @@ def hrc_dose_extract_stat_data_month(year='NA', month='NA'):
     output: <stat_dir>/<inst>_<sec>_acc_out
             <stat_dir>/<inst>_<sec>_dff_out
     """
-    if year == 'NA' or month == 'NA':
+    if not year or not month:
         year  = raw_input('Year: ')
         month = raw_input('Month: ')
     
-    year  = int(year)
-    month = int(month)
-
-    syear  = str(year)
-    smonth = str(month)
-    if month < 10:
-        smonth = '0' + smonth
-
     for i in range(0,10):
         ifile = f'{HRCExp.data_s_dir}/Cumulative/HRCS_08_1999_{month:02d}_{year}_{i}.fits.gz'
         out   = f'{HRCExp.stat_s_dir}/hrcs_{i}_acc_out'
