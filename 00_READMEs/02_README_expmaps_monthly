@@ -6,14 +6,14 @@ outdir=./test/expmaps_monthly
 
 for m in {8..12}
 do
-    python3 ./src/expmaps_monthly.py -o $outdir 1999 $m
+    time python3 ./src/expmaps_monthly.py -o $outdir 1999 $m
 done
 
 for y in {2000..2023}
 do
     for m in {1..12}
     do
-	python3 ./src/expmaps_monthly.py -o $outdir $y $m
+	time python3 ./src/expmaps_monthly.py -o $outdir $y $m
     done
 done
     
