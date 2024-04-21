@@ -2,18 +2,18 @@
 
 . ~/python3_venv/bin/activate
 
-outdir=./test/expmaps_monthly
+outdir=./test/monthly
 
 for m in {8..12}
 do
-    time python3 ./src/expmaps_monthly.py -o $outdir 1999 $m
+    time python3 ./src/expmaps_monthly.py 1999 $m $outdir
 done
 
 for y in {2000..2023}
 do
     for m in {1..12}
     do
-	time python3 ./src/expmaps_monthly.py -o $outdir $y $m
+	time python3 ./src/expmaps_monthly.py $y $m $outdir
     done
 done
     

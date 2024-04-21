@@ -64,11 +64,11 @@ def write_files(expmaps, year, month, outdir):
 
 def main():
     parser = argparse.ArgumentParser(
-        description='Create tar file containing evt1 files for a given year/month.',
+        description='Create exposure maps for a given year/month.'
     )
-    parser.add_argument('-o' , '--outdir', default='./foo', help='Output directory.')
     parser.add_argument('year', type=int)
     parser.add_argument('month', type=int)
+    parser.add_argument('outdir', help='Output directory.')
     args = parser.parse_args()
     expmaps_monthly(args.year, args.month, args.outdir)
 
