@@ -19,8 +19,7 @@ def expmaps_cumulative(indir, outdir, check=False):
         nmonths = 13-m0+m1+ 12*(y1-y0-1)
     sys.stderr.write(f'Summing {nmonths} months, from {y0}-{m0:02} to {y1}-{m1:02}.\n')
 
-    if not check:
-        expmaps = HRCExp.mk_zero_expmaps()
+    expmaps = HRCExp.mk_zero_expmaps()
 
     fmstats = { }
     fastats = { }
@@ -185,9 +184,10 @@ def main():
     parser = argparse.ArgumentParser(
         description='Combine monthly exposure maps.'
     )
-    parser.add_argument('-c', '--check', action='store_true',
-                        help='Check for the existence of any missing monthly exposure maps
-                        without doing anything else.')
+    parser.add_argument('-c', '--check', action='store_true', help='\
+Check for the existence of any missing monthly exposure maps without\
+doing anything else.'
+                        )
     parser.add_argument('indir', help='Input directory.')
     parser.add_argument('outdir', help='Output directory.')
     args = parser.parse_args()
