@@ -57,7 +57,6 @@ def write_files(expmaps, year, month, outdir):
                 #dtype = np.int8
             if max <= np.iinfo(np.int16).max:
                 dtype = np.int16
-            print(fname, det, i, expmap.shape)
             hdu = astropy.io.fits.PrimaryHDU(expmap.astype(dtype))
             HRCExp.hdu_add_img_wcs(hdu, x0, y0)
             hdul = astropy.io.fits.HDUList([hdu])

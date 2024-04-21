@@ -16,6 +16,3 @@ do
 	time python3 ./src/expmaps_monthly.py $y $m $outdir
     done
 done
-    
-
-
