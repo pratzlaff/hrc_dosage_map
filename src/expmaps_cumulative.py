@@ -8,8 +8,9 @@ import sys
 
 import HRCExp
 
-def expmaps_cumulative(indir, outdir):
-    HRCExp.mkdir_p(outdir)
+def expmaps_cumulative(indir, outdir, check=False):
+    if not check:
+        HRCExp.mkdir_p(outdir)
 
     y0, m0, y1, m1 = stop_start_months(indir)
     if y1==y0:
@@ -18,7 +19,8 @@ def expmaps_cumulative(indir, outdir):
         nmonths = 13-m0+m1+ 12*(y1-y0-1)
     sys.stderr.write(f'Summing {nmonths} months, from {y0}-{m0:02} to {y1}-{m1:02}.\n')
 
-    expmaps = HRCExp.mk_zero_expmaps()
+    if not check:
+        expmaps = HRCExp.mk_zero_expmaps()
 
     fmstats = { }
     fastats = { }
@@ -34,14 +36,19 @@ def expmaps_cumulative(indir, outdir):
 
             for i in range(len(expmaps[det])):
 
+                fname = f'{indir}/hrc{det}-{i}_{year}_{month:02}.fits.gz'
+
+                if check:
+                    if not os.path.isfile(fname):
+                        sys.stderr.write(f'Could not open {fname}, continuing without.\n')
+                    continue
+
                 # open stats files if this is the first time they're used
                 if len(fmstats[det]) < i+1:
                     fmname = f'{outdir}/hrc{det}-{i}_stats_dff'
                     fmstats[det].append(open(fmname, 'w'))
                     faname = f'{outdir}/hrc{det}-{i}_stats_acc'
                     fastats[det].append(open(faname, 'w'))
-
-                fname = f'{indir}/hrc{det}-{i}_{year}_{month:02}.fits.gz'
 
                 if not os.path.isfile(fname):
                     sys.stderr.write(f'Could not open {fname}, continuing without.\n')
@@ -91,7 +98,9 @@ def expmaps_cumulative(indir, outdir):
                         f'{s3:5.1f}',
                         '\n']))
 
-        write_files(expmaps, y0, m0, year, month, outdir)
+        if not check:
+            write_files(expmaps, y0, m0, year, month, outdir)
+
         if month == 12:
             year += 1
             month = 1
@@ -176,10 +185,13 @@ def main():
     parser = argparse.ArgumentParser(
         description='Combine monthly exposure maps.'
     )
+    parser.add_argument('-c', '--check', action='store_true',
+                        help='Check for the existence of any missing monthly exposure maps
+                        without doing anything else.')
     parser.add_argument('indir', help='Input directory.')
     parser.add_argument('outdir', help='Output directory.')
     args = parser.parse_args()
-    expmaps_cumulative(args.indir, args.outdir)
+    expmaps_cumulative(args.indir, args.outdir, args.check)
 
 if __name__ == '__main__':
     main()
