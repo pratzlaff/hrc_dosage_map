@@ -32,7 +32,7 @@ def expmaps_monthly(year, month, outdir):
         sys.stderr.write(f'Processing: {evt1} : {det}\n')
         rawx, rawy = HRCExp.fits_read_raw(evt1)
         if archived:
-            os.unlink(fitsName)
+            os.unlink(evt1)
 
         nsub = len(expmaps[det])
         for i in range(nsub):
@@ -57,6 +57,7 @@ def write_files(expmaps, year, month, outdir):
                 #dtype = np.int8
             if max <= np.iinfo(np.int16).max:
                 dtype = np.int16
+            print(fname, det, i, expmap.shape)
             hdu = astropy.io.fits.PrimaryHDU(expmap.astype(dtype))
             HRCExp.hdu_add_img_wcs(hdu, x0, y0)
             hdul = astropy.io.fits.HDUList([hdu])
