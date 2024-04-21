@@ -1,0 +1,9 @@
+#! /bin/bash
+
+. ~/python3_venv/bin/activate
+
+
+indir=./test/monthly
+outdir=./test/cumulative
+
+python3 ./src/expmaps_cumulative.py $indir $outdir
