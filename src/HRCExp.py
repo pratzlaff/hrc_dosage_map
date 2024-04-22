@@ -4,6 +4,7 @@ import glob
 import matplotlib.pyplot as plt
 import numpy as np
 import os
+import pprint
 import re
 import shutil
 import subprocess
@@ -58,14 +59,24 @@ subraw = {
            }
 }
 
-def mk_zero_expmaps():
+def nsubdets(det):
+    return len(subraw[det]['x'][0])
+
+def mk_zero_expmaps(det=None, subdet=None):
+    dets = subraw.keys()
+    if det:
+        dets = [ det ]
     expmaps = { }
-    for det in subraw:
-        expmaps[det] = []
-        for i in range(len(subraw[det]['x'][0])):
+
+    for det in dets:
+        expmaps[det] = { }
+        subdets = list(range(len(subraw[det]['x'][0])))
+        if subdet is not None:
+            subdets = [ subdet ]
+        for i in subdets:
             nx = subraw[det]['x'][1][i] - subraw[det]['x'][0][i] + 1
             ny = subraw[det]['y'][1][i] - subraw[det]['y'][0][i] + 1
-            expmaps[det].append(np.zeros((ny, nx), dtype=np.int32))
+            expmaps[det][i] = np.zeros((ny, nx), dtype=np.int32)
     return expmaps
 
 def mkdir_p(path):
