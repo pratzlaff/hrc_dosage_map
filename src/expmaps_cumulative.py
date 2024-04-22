@@ -53,6 +53,8 @@ def expmaps_cumulative(indir, outdir, check=False):
                     sys.stderr.write(f'Could not open {fname}, continuing without.\n')
                     fmstats[det][i].write('\t'.join(f'{year}',f'{month}',*['NA']*8,'\n'))
                     fastats[det][i].write('\t'.join(f'{year}',f'{month}',*['NA']*8,'\n'))
+                    fmstats[det][i].flush()
+                    fastats[det][i].flush()
                     continue
 
                 with astropy.io.fits.open(fname) as hdul:
@@ -64,6 +66,8 @@ def expmaps_cumulative(indir, outdir, check=False):
                     except:
                         fmstats[det][i].write('\t'.join([f'{year}',f'{month}',*['NA']*8,'\n']))
                         fastats[det][i].write('\t'.join([f'{year}',f'{month}',*['NA']*8,'\n']))
+                        fmstats[det][i].flush()
+                        fastats[det][i].flush()
                         continue
                     out = calc_stats(img, det, i)
                     fmstats[det][i].write('\t'.join([
@@ -96,6 +100,9 @@ def expmaps_cumulative(indir, outdir, check=False):
                         f'{s2:5.1f}',
                         f'{s3:5.1f}',
                         '\n']))
+
+                    fmstats[det][i].flush()
+                    fastats[det][i].flush()
 
         if not check:
             write_files(expmaps, y0, m0, year, month, outdir)
@@ -141,7 +148,7 @@ def calc_stats(img, det, i):
     image[image<0] = 0
     image[image>1e10] = 0
     mean = image.mean()
-    dev = image.std()
+    dev = np.sqrt(((img-mean)**2).sum()/np.multiply.accumulate(img.shape)[-1])
     minx, miny = np.unravel_index(np.argmin(image), image.shape)
     maxx, maxy = np.unravel_index(np.argmax(image), image.shape)
     dmin = image[minx, miny]
