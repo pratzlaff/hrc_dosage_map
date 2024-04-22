@@ -1,6 +1,7 @@
 import astropy.io.fits
 import errno
 import glob
+import matplotlib.pyplot as plt
 import numpy as np
 import os
 import re
@@ -76,8 +77,43 @@ def mkdir_p(path):
         else:
             raise
 
-def fits2png(infile, outfile):
-    subprocess.run(['fitspng', '-l', '0,1', '-o', outfile, infile])
+def fits2png_matplotlib(infile, outfile):
+    hdu = astropy.io.fits.open(infile)[0]
+    hdr = hdu.header
+    img = hdu.data
+
+    try:
+        dmax = img.max()
+        hcnt, bin_edges = np.histogram(img, bins=dmax, range=(0.5, dmax+0.5))
+        hbin = 0.5*(bin_edges[1:] + bin_edges[:-1])
+        extent =  [hdr['CRVAL1P'], hdr['CRVAL1P']+img.shape[1]+0.5,
+                   hdr['CRVAL2P'], hdr['CRVAL2P']+img.shape[0]+0.5 ]
+        im = plt.imshow(img, vmax=np.interp(0.95, hcnt, hbin), extent=extent, origin='lower')
+        plt.xlabel('RAWX')
+        plt.ylabel('RAWY')
+        plt.colorbar(im)
+        plt.savefig(outfile, bbox_inches='tight')
+        plt.close()
+    except:
+        plt.close()
+
+def fits2png_fitspng(infile, outfile):
+    subprocess.run(['fitspng', '-s', '8', '-l', '0,1', '-o', outfile, infile])
+
+def fits2png_ds9(infile, outfile):
+    subprocess.run(['ds9',
+                    infile,
+                    '-geometry', '760x1024',
+                    '-zoom', 'to', 'fit',
+                    '-scale', 'mode', '99.5',
+                    '-cmap', 'sls',
+                    '-colorbar', 'yes',
+                    '-colorbar', 'vertical',
+                    '-colorbar', 'numerics', 'yes',
+                    '-colorbar', 'space', 'value',
+                    '-colorbar', 'fontsize', '12',
+                    '-saveimage', 'png', outfile,
+                    '-exit']);
 
 def fits_read_raw(fname):
     """Return RAW coordinates from an events list, status-filtered for
