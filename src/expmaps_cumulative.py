@@ -8,33 +8,39 @@ import sys
 
 import HRCExp
 
-def expmaps_cumulative(indir, outdir, check=False):
+def expmaps_cumulative(indir, outdir, check=False, det=None, subdet=None):
     if not check:
         HRCExp.mkdir_p(outdir)
 
-    y0, m0, y1, m1 = stop_start_months(indir)
+    y0, m0, y1, m1 = stop_start_months(indir, det, subdet)
     if y1==y0:
         nmonths = m1-m0+1
     else:
         nmonths = 13-m0+m1+ 12*(y1-y0-1)
     sys.stderr.write(f'Summing {nmonths} months, from {y0}-{m0:02} to {y1}-{m1:02}.\n')
 
-    expmaps = HRCExp.mk_zero_expmaps()
+    expmaps = HRCExp.mk_zero_expmaps(det, subdet)
 
-    fmstats = { }
-    fastats = { }
+    fmstats = { } # monthly filehandle
+    fastats = { } # cumulative filehandles
+    lastats = { } # last accumulative stat file line
 
     year, month = y0, m0
+
     for j in range(nmonths):
         sys.stderr.write(f'{year}-{month:02d}\n')
         for det in expmaps:
 
             if det not in fmstats:
-                fmstats[det] = []
-                fastats[det] = []
+                fmstats[det] = { }
+                fastats[det] = { }
+                lastats[det] = { }
 
-            for i in range(len(expmaps[det])):
+            subdets = list(range(HRCExp.nsubdets(det)))
+            if subdet is not None:
+                subdets = [ subdet ]
 
+            for i in subdets:
                 fname = f'{indir}/hrc{det}-{i}_{year}_{month:02}.fits.gz'
 
                 if check:
@@ -43,16 +49,17 @@ def expmaps_cumulative(indir, outdir, check=False):
                     continue
 
                 # open stats files if this is the first time they're used
-                if len(fmstats[det]) < i+1:
+                if i not in list(fmstats[det]):
                     fmname = f'{outdir}/hrc{det}-{i}_stats_dff'
-                    fmstats[det].append(open(fmname, 'w'))
+                    fmstats[det][i] = open(fmname, 'w')
                     faname = f'{outdir}/hrc{det}-{i}_stats_acc'
-                    fastats[det].append(open(faname, 'w'))
+                    fastats[det][i] = open(faname, 'w')
+                    lastats[det][i] = '\t'.join([f'{year}',f'{month}',*['0']*9,'\n'])
 
                 if not os.path.isfile(fname):
                     sys.stderr.write(f'Could not open {fname}, continuing without.\n')
-                    fmstats[det][i].write('\t'.join(f'{year}',f'{month}',*['NA']*8,'\n'))
-                    fastats[det][i].write('\t'.join(f'{year}',f'{month}',*['NA']*8,'\n'))
+                    fmstats[det][i].write('\t'.join([f'{year}',f'{month}',*['0']*9,'\n']))
+                    fastats[det][i].write(lastats[det][i])
                     fmstats[det][i].flush()
                     fastats[det][i].flush()
                     continue
@@ -64,8 +71,8 @@ def expmaps_cumulative(indir, outdir, check=False):
                     try:
                         s1, s2, s3 = sigma_values(img)
                     except:
-                        fmstats[det][i].write('\t'.join([f'{year}',f'{month}',*['NA']*8,'\n']))
-                        fastats[det][i].write('\t'.join([f'{year}',f'{month}',*['NA']*8,'\n']))
+                        fmstats[det][i].write('\t'.join([f'{year}',f'{month}',*['0']*9,'\n']))
+                        fastats[det][i].write(lastats[det][i])
                         fmstats[det][i].flush()
                         fastats[det][i].flush()
                         continue
@@ -75,9 +82,9 @@ def expmaps_cumulative(indir, outdir, check=False):
                         f'{month}',
                         f'{out[0]:5.6f}',
                         f'{out[1]:5.6f}',
-                        f'{out[2]:5.1f}',
+                        f'{out[2]:d}',
                         f'({out[4]:.0f},{out[5]:.0f})',
-                        f'{out[3]:5.1f}',
+                        f'{out[3]:d}',
                         f'({out[6]:.0f},{out[7]:.0f})',
                         f'{s1:5.1f}',
                         f'{s2:5.1f}',
@@ -87,19 +94,20 @@ def expmaps_cumulative(indir, outdir, check=False):
                     expmaps[det][i] += img
                     out = calc_stats(expmaps[det][i], det, i)
                     s1, s2, s3 = sigma_values(expmaps[det][i])
-                    fastats[det][i].write('\t'.join([
+                    lastats[det][i] = '\t'.join([
                         f'{year}',
                         f'{month}',
                         f'{out[0]:5.6f}',
                         f'{out[1]:5.6f}',
-                        f'{out[2]:5.1f}',
+                        f'{out[2]:d}',
                         f'({out[4]:.0f},{out[5]:.0f})',
-                        f'{out[3]:5.1f}',
+                        f'{out[3]:d}',
                         f'({out[6]:.0f},{out[7]:.0f})',
                         f'{s1:5.1f}',
                         f'{s2:5.1f}',
                         f'{s3:5.1f}',
-                        '\n']))
+                        '\n'])
+                    fastats[det][i].write(lastats[det][i])
 
                     fmstats[det][i].flush()
                     fastats[det][i].flush()
@@ -161,7 +169,7 @@ def calc_stats(img, det, i):
 
 def write_files(expmaps, y0, m0, y1, m1, outdir):
     for det in expmaps:
-        for i in range(len(expmaps[det])):
+        for i in expmaps[det]:
             fname = f'{outdir}/hrc{det}-{i}_{y0}_{m0:02d}-{y1}_{m1:02d}.fits.gz'
             rawx0 = HRCExp.subraw[det]['x'][0][i]
             rawy0 = HRCExp.subraw[det]['y'][0][i]
@@ -177,8 +185,11 @@ def write_files(expmaps, y0, m0, y1, m1, outdir):
             hdul = astropy.io.fits.HDUList([hdu])
             hdul.writeto(fname, checksum=True, overwrite=True)
 
-def stop_start_months(indir):
-    files = glob.glob(f'{indir}/hrci-0_*.fits.gz')
+def stop_start_months(indir, det=None, subdet=None):
+    if not det:
+        det='i'
+        subdet=0
+    files = glob.glob(f'{indir}/hrc{det}-{subdet}_*.fits.gz')
     files.sort()
     if not files:
         sys.stderr.write(f'no appropriate files found in {indir}\n')
@@ -192,13 +203,18 @@ def main():
         description='Combine monthly exposure maps.'
     )
     parser.add_argument('-c', '--check', action='store_true', help='\
-Check for the existence of any missing monthly exposure maps without\
-doing anything else.'
-                        )
+Check for the existence of any missing monthly exposure maps without \
+doing anything else.')
+    parser.add_argument('-d', '--det', choices=['i', 's'], help='\
+Only calculate cumulative map for the given detector. Must be used \
+in conjunction with -i.')
+    parser.add_argument('-s', '--subdet', type=int, choices=range(10), help='\
+Only calculate cumulative map for the given subdetector region. Must \
+be used in conjunction with --det.')
     parser.add_argument('indir', help='Input directory.')
     parser.add_argument('outdir', help='Output directory.')
     args = parser.parse_args()
-    expmaps_cumulative(args.indir, args.outdir, args.check)
+    expmaps_cumulative(args.indir, args.outdir, check=args.check, det=args.det, subdet=args.subdet)
 
 if __name__ == '__main__':
     main()

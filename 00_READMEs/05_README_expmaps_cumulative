@@ -1,0 +1,20 @@
+#! /bin/bash
+
+indir=./test/monthly
+outdir=./test/cumulative
+
+. ~/python3_venv/bin/activate
+
+screen -dmS cexpmaps bash -c 'exec bash'
+det=i
+for subdet in {0..8}
+do
+  screen -S cexpmaps -X screen bash -c "time python3 src/expmaps_cumulative.py $indir $outdir -d $det -s $subdet; exec bash"
+done
+det=s
+for subdet in {0..9}
+do
+  screen -S cexpmaps -X screen bash -c "time python3 src/expmaps_cumulative.py $indir $outdir -d $det -s $subdet; exec bash"
+done
+screen -rS cexpmaps
+COMMENT
