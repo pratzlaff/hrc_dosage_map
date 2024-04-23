@@ -14,6 +14,6 @@ done
 det=s
 for subdet in {0..9}
 do
-  screen -S stats -X screen bash -c "time python3 src/mk_stats_cumulative.py $indir $outdir $det $subdet; exec bash"
+  screen -S stats -X screen bash -c "time python3 src/mk_stats.py $indir $outdir $det $subdet; exec bash"
 done
 screen -rS stats
