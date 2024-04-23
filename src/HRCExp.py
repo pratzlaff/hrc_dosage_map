@@ -182,25 +182,43 @@ def fits_img_mean(fname):
     with astropy.io.fits.open(fname) as hdul:
         return np.mean(hdul[0].data)
 
-def stats(fname):
+def stats_img(img, det, i):
+    image = img.copy()
+    #--- to avoid getting min value from the outside of the frame
+    #--- edge of a CCD, set threshold
+    image[image<0] = 0
+    image[image>1e10] = 0
+    mean = image.mean()
+    dev = np.sqrt(((img-mean)**2).sum()/np.multiply.accumulate(img.shape)[-1])
+    minx, miny = np.unravel_index(np.argmin(image), image.shape)
+    maxx, maxy = np.unravel_index(np.argmax(image), image.shape)
+    dmin = image[minx, miny]
+    dmax = image[maxx, maxy]
+    minx += subraw[det]['y'][0][i]
+    maxx += subraw[det]['y'][0][i]
+    miny += subraw[det]['x'][0][i]
+    maxy += subraw[det]['x'][0][i]
+    return mean, dev, dmin, dmax, miny, minx, maxy, maxx
+
+def stats_fits(fname):
     with astropy.io.fits.open(fname) as hdul:
-        image = hdul[0].data
+        img = hdul[0].data
         hdr = hdul[0].header
-        #--- to avoid getting min value from the outside of the frame
-        #--- edge of a CCD, set threshold
-        image[image<0] = 0
-        image[image>1e10] = 0
-        mean = image.mean()
-        dev = image.std()
-        minx, miny = np.unravel_index(np.argmin(image), image.shape)
-        maxx, maxy = np.unravel_index(np.argmax(image), image.shape)
-        dmin = image[minx, miny]
-        dmax = image[maxx, maxy]
+        det = 'i'
+        subdet = 0
+        mean, dev, dmin, dmax, miny, minx, maxy, maxx = stats_img(img, det, subdet)
+
+        minx -= subraw[det]['y'][0][subdet]
+        maxx -= subraw[det]['y'][0][subdet]
+        miny -= subraw[det]['x'][0][subdet]
+        maxy -= subraw[det]['x'][0][subdet]
+
         minx += hdr['CRVAL2P']+0.5
         maxx += hdr['CRVAL2P']+0.5
         miny += hdr['CRVAL1P']+0.5
         maxy += hdr['CRVAL1P']+0.5
-        return mean,  dev,  dmin,  dmax , miny,  minx,  maxy,  maxx
+
+        return mean, dev, dmin, dmax, miny, minx, maxy, maxx
 
 def hdu_add_img_wcs(hdu, refrawx, refrawy):
     hdr = hdu.header

@@ -21,20 +21,11 @@ def expmaps_cumulative(indir, outdir, check=False, det=None, subdet=None):
 
     expmaps = HRCExp.mk_zero_expmaps(det, subdet)
 
-    fmstats = { } # monthly filehandle
-    fastats = { } # cumulative filehandles
-    lastats = { } # last accumulative stat file line
-
     year, month = y0, m0
 
     for j in range(nmonths):
         sys.stderr.write(f'{year}-{month:02d}\n')
         for det in expmaps:
-
-            if det not in fmstats:
-                fmstats[det] = { }
-                fastats[det] = { }
-                lastats[det] = { }
 
             subdets = list(range(HRCExp.nsubdets(det)))
             if subdet is not None:
@@ -43,74 +34,16 @@ def expmaps_cumulative(indir, outdir, check=False, det=None, subdet=None):
             for i in subdets:
                 fname = f'{indir}/hrc{det}-{i}_{year}_{month:02}.fits.gz'
 
-                if check:
-                    if not os.path.isfile(fname):
-                        sys.stderr.write(f'Could not open {fname}, continuing without.\n')
-                    continue
-
-                # open stats files if this is the first time they're used
-                if i not in list(fmstats[det]):
-                    fmname = f'{outdir}/hrc{det}-{i}_stats_dff'
-                    fmstats[det][i] = open(fmname, 'w')
-                    faname = f'{outdir}/hrc{det}-{i}_stats_acc'
-                    fastats[det][i] = open(faname, 'w')
-                    lastats[det][i] = '\t'.join([f'{year}',f'{month}',*['0']*9,'\n'])
-
                 if not os.path.isfile(fname):
                     sys.stderr.write(f'Could not open {fname}, continuing without.\n')
-                    fmstats[det][i].write('\t'.join([f'{year}',f'{month}',*['0']*9,'\n']))
-                    fastats[det][i].write(lastats[det][i])
-                    fmstats[det][i].flush()
-                    fastats[det][i].flush()
+                    continue
+
+                if check:
                     continue
 
                 with astropy.io.fits.open(fname) as hdul:
                     img = hdul[0].data
-                    # if there were no observations during a month, will throw a
-                    # ValuError when calling numpy.histogram with nbins=0
-                    try:
-                        s1, s2, s3 = sigma_values(img)
-                    except:
-                        fmstats[det][i].write('\t'.join([f'{year}',f'{month}',*['0']*9,'\n']))
-                        fastats[det][i].write(lastats[det][i])
-                        fmstats[det][i].flush()
-                        fastats[det][i].flush()
-                        continue
-                    out = calc_stats(img, det, i)
-                    fmstats[det][i].write('\t'.join([
-                        f'{year}',
-                        f'{month}',
-                        f'{out[0]:5.6f}',
-                        f'{out[1]:5.6f}',
-                        f'{out[2]:d}',
-                        f'({out[4]:.0f},{out[5]:.0f})',
-                        f'{out[3]:d}',
-                        f'({out[6]:.0f},{out[7]:.0f})',
-                        f'{s1:5.1f}',
-                        f'{s2:5.1f}',
-                        f'{s3:5.1f}',
-                        '\n']))
-
                     expmaps[det][i] += img
-                    out = calc_stats(expmaps[det][i], det, i)
-                    s1, s2, s3 = sigma_values(expmaps[det][i])
-                    lastats[det][i] = '\t'.join([
-                        f'{year}',
-                        f'{month}',
-                        f'{out[0]:5.6f}',
-                        f'{out[1]:5.6f}',
-                        f'{out[2]:d}',
-                        f'({out[4]:.0f},{out[5]:.0f})',
-                        f'{out[3]:d}',
-                        f'({out[6]:.0f},{out[7]:.0f})',
-                        f'{s1:5.1f}',
-                        f'{s2:5.1f}',
-                        f'{s3:5.1f}',
-                        '\n'])
-                    fastats[det][i].write(lastats[det][i])
-
-                    fmstats[det][i].flush()
-                    fastats[det][i].flush()
 
         if not check:
             write_files(expmaps, y0, m0, year, month, outdir)
@@ -120,52 +53,6 @@ def expmaps_cumulative(indir, outdir, check=False, det=None, subdet=None):
             month = 1
         else:
             month += 1
-
-def sigma_values(img):
-    dmax = img.max()
-    hcnt, bin_edges = np.histogram(img, bins=dmax, range=(0.5, dmax+0.5))
-    hbin = 0.5*(bin_edges[1:] + bin_edges[:-1])
-    vsum = hcnt.sum()
-    
-    if hbin.size > 0:
-        v68 = int(0.68  * vsum)
-        v95 = int(0.95  * vsum)
-        v99 = int(0.997 * vsum)
-        sigma1 = -999
-        sigma2 = -999
-        sigma3 = -999
-        acc= 0
-        for i in range(hbin.size):
-            acc += hcnt[i]
-            if acc > v68 and sigma1 < 0:
-                sigma1 = hbin[i]
-            elif acc > v95 and sigma2 < 0:
-                sigma2 = hbin[i]
-            elif acc > v99 and sigma3 < 0:
-                sigma3 = hbin[i]
-                break
-    
-        return sigma1, sigma2, sigma3
-    else:
-        return 0, 0, 0
-
-def calc_stats(img, det, i):
-    image = img.copy()
-    #--- to avoid getting min value from the outside of the frame
-    #--- edge of a CCD, set threshold
-    image[image<0] = 0
-    image[image>1e10] = 0
-    mean = image.mean()
-    dev = np.sqrt(((img-mean)**2).sum()/np.multiply.accumulate(img.shape)[-1])
-    minx, miny = np.unravel_index(np.argmin(image), image.shape)
-    maxx, maxy = np.unravel_index(np.argmax(image), image.shape)
-    dmin = image[minx, miny]
-    dmax = image[maxx, maxy]
-    minx += HRCExp.subraw[det]['x'][0][i]
-    maxx += HRCExp.subraw[det]['x'][0][i]
-    miny += HRCExp.subraw[det]['y'][0][i]
-    maxy += HRCExp.subraw[det]['y'][0][i]
-    return mean,  dev,  dmin,  dmax , miny,  minx,  maxy,  maxx
 
 def write_files(expmaps, y0, m0, y1, m1, outdir):
     for det in expmaps:

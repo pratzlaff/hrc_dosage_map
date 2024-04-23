@@ -17,4 +17,3 @@ do
   screen -S cexpmaps -X screen bash -c "time python3 src/expmaps_cumulative.py $indir $outdir -d $det -s $subdet; exec bash"
 done
 screen -rS cexpmaps
-COMMENT
