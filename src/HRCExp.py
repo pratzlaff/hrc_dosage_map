@@ -9,19 +9,19 @@ import re
 import shutil
 import subprocess
 
-#
-#--- reading directory list
-#
-path = '/data/legs/rpete/flight/hrc_exposure_map/Scripts/house_keeping/dir_list'
-f    = open(path, 'r')
-data = [line.strip() for line in f.readlines()]
-f.close()
+# #
+# #--- reading directory list
+# #
+# path = '/data/legs/rpete/flight/hrc_exposure_map/Scripts/house_keeping/dir_list'
+# f    = open(path, 'r')
+# data = [line.strip() for line in f.readlines()]
+# f.close()
 
-for ent in data:
-    atemp = re.split(':', ent)
-    var  = atemp[1].strip()
-    line = atemp[0].strip()
-    exec("%s = %s" %(var, line))
+# for ent in data:
+#     atemp = re.split(':', ent)
+#     var  = atemp[1].strip()
+#     line = atemp[0].strip()
+#     exec("%s = %s" %(var, line))
 
 # #
 # #--- setting sections for subdividing image
@@ -42,12 +42,6 @@ for ent in data:
 #     'HRC-S' : (4915, 9831, 14747, 19663, 24579, 29495, 34411, 39327, 44243, 49159),
 #     'HRC-I' : (5461,10923, 16385,  5461, 10923, 16385,  5461, 10923, 16385),
 # }
-subraw = {
-    's' : { 'x':[ [0]*3, [4095]*3 ],
-            'y':[ [0, 16384, 32768], [16383, 32767, 49151] ]
-           },
-    'i' : { 'x':[ [0], [16383] ], 'y':[ [0], [16383] ] }
-}
 
 subraw = {
     's' : { 'x':[[0]*10,
@@ -64,6 +58,13 @@ subraw = {
                  [5461,10923,16385,5461,10923,16385,5461,10923,16385]
                  ]
            }
+}
+
+subraw = {
+    's' : { 'x':[ [0]*3, [4095]*3 ],
+            'y':[ [0, 16384, 32768], [16383, 32767, 49151] ]
+           },
+    'i' : { 'x':[ [0], [16383] ], 'y':[ [0], [16383] ] }
 }
 
 def nsubdets(det):
@@ -83,7 +84,7 @@ def mk_zero_expmaps(det=None, subdet=None):
         for i in subdets:
             nx = subraw[det]['x'][1][i] - subraw[det]['x'][0][i] + 1
             ny = subraw[det]['y'][1][i] - subraw[det]['y'][0][i] + 1
-            expmaps[det][i] = np.zeros((ny, nx), dtype=np.int32)
+            expmaps[det][i] = np.zeros((ny, nx), dtype=np.int16)
     return expmaps
 
 def mkdir_p(path):

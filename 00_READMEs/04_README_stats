@@ -1,18 +1,18 @@
 #! /bin/bash
 
-indir=./test/monthly
-outdir=./test/stats
+indir=./test/whole/monthly
+outdir=./test/whole/stats
 
 . ~/python3_venv/bin/activate
 
 screen -dmS stats bash -c 'exec bash'
 det=i
-for subdet in {0..8}
+for subdet in {0..0}
 do
   screen -S stats -X screen bash -c "time python3 src/mk_stats.py $indir $outdir $det $subdet; exec bash"
 done
 det=s
-for subdet in {0..9}
+for subdet in {0..2}
 do
   screen -S stats -X screen bash -c "time python3 src/mk_stats.py $indir $outdir $det $subdet; exec bash"
 done

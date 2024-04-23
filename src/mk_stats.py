@@ -9,7 +9,7 @@ import HRCExp
 
 def mk_stats(indir, outdir, det, subdet):
     HRCExp.mkdir_p(outdir)
-    files = glob.glob(f'{indir}/hrc{det}-{subdet}_[0-9][0-9][0-9][0-9]_[0-9][0-9].fits.gz')
+    files = glob.glob(f'{indir}/hrc{det}{subdet}m_[0-9][0-9][0-9][0-9]-[0-9][0-9].fits.gz')
     files.sort()
     if not files:
         sys.stderr.write(f'no files found in {indir} for detector {det}:{subdet}\n')
@@ -24,7 +24,7 @@ def mk_stats(indir, outdir, det, subdet):
 
     for fname in files:
         sys.stderr.write(f'{fname}\n')
-        year, month = re.search(r'(\d{4})_(\d{2})', fname).groups()[0:2]
+        year, month = re.search(r'(\d{4})-(\d{2})', fname).groups()[0:2]
         year = int(year)
         month = int(month)
         with astropy.io.fits.open(fname) as hdul:

@@ -32,7 +32,7 @@ def expmaps_cumulative(indir, outdir, check=False, det=None, subdet=None):
                 subdets = [ subdet ]
 
             for i in subdets:
-                fname = f'{indir}/hrc{det}-{i}_{year}_{month:02}.fits.gz'
+                fname = f'{indir}/hrc{det}{i}m_{year}-{month:02}.fits.gz'
 
                 if not os.path.isfile(fname):
                     sys.stderr.write(f'Could not open {fname}, continuing without.\n')
@@ -57,7 +57,7 @@ def expmaps_cumulative(indir, outdir, check=False, det=None, subdet=None):
 def write_files(expmaps, y0, m0, y1, m1, outdir):
     for det in expmaps:
         for i in expmaps[det]:
-            fname = f'{outdir}/hrc{det}-{i}_{y0}_{m0:02d}-{y1}_{m1:02d}.fits.gz'
+            fname = f'{outdir}/hrc{det}{i}c_{y1}-{m1:02d}.fits.gz'
             rawx0 = HRCExp.subraw[det]['x'][0][i]
             rawy0 = HRCExp.subraw[det]['y'][0][i]
             expmap = expmaps[det][i]
@@ -76,13 +76,13 @@ def stop_start_months(indir, det=None, subdet=None):
     if not det:
         det='i'
         subdet=0
-    files = glob.glob(f'{indir}/hrc{det}-{subdet}_*.fits.gz')
+    files = glob.glob(f'{indir}/hrc{det}{subdet}m_*.fits.gz')
     files.sort()
     if not files:
         sys.stderr.write(f'no appropriate files found in {indir}\n')
         sys.exit(1)
-    year0, month0 = re.search(r'(\d{4})_(\d{2})', files[0]).groups()[0:2]
-    year1, month1 = re.search(r'(\d{4})_(\d{2})', files[-1]).groups()[0:2]
+    year0, month0 = re.search(r'(\d{4})-(\d{2})', files[0]).groups()[0:2]
+    year1, month1 = re.search(r'(\d{4})-(\d{2})', files[-1]).groups()[0:2]
     return int(year0), int(month0), int(year1), int(month1)
 
 def main():

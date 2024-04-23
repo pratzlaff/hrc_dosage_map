@@ -1,20 +1,19 @@
 #! /bin/bash
 
-outdir=./test/monthly
-outdir=./test/godzilla
+outdir=./test/whole/monthly
 
 . ~/python3_venv/bin/activate
 
 screen -dmS mexpmaps bash -c 'exec bash'
 y=1999
-script="for m in {8..12}; do python3 src/expmaps_monthly.py $y \\\$m $outdir; done"
+script="time for m in {8..12}; do echo $y-\\\$m; python3 src/expmaps_monthly.py $y \\\$m $outdir; done"
 screen -S mexpmaps -X screen bash -c "$script; exec bash"
 for y in {2000..2023}
 do
-  script="for m in {1..12}; do python3 src/expmaps_monthly.py $y \\\$m $outdir; done"
+  script="time for m in {1..12}; do echo $y-\\\$m; python3 src/expmaps_monthly.py $y \\\$m $outdir; done"
   screen -S mexpmaps -X screen bash -c "$script; exec bash"
 done
 y=2024
-script="for m in {1..3}; do python3 src/expmaps_monthly.py $y \\\$m $outdir; done"
+script="time for m in {1..3}; do echo $y-\\\$m; python3 src/expmaps_monthly.py $y \\\$m $outdir; done"
 screen -S mexpmaps -X screen bash -c "$script; exec bash"
 screen -rS mexpmaps

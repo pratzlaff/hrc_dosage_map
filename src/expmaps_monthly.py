@@ -46,8 +46,8 @@ def expmaps_monthly(year, month, outdir):
 
 def write_files(expmaps, year, month, outdir):
     for det in expmaps:
-        for i in range(len(expmaps[det])):
-            fname = f'{outdir}/hrc{det}-{i}_{year}_{month:02d}.fits.gz'
+        for i in expmaps[det]:
+            fname = f'{outdir}/hrc{det}{i}m_{year}-{month:02d}.fits.gz'
             x0 = HRCExp.subraw[det]['x'][0][i]
             y0 = HRCExp.subraw[det]['y'][0][i]
             expmap = expmaps[det][i]
