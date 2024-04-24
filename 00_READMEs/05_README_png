@@ -1,0 +1,8 @@
+#! /bin/bash
+
+indir=./test/whole/monthly
+outdir=./test/whole/png_matplotlib
+
+. ~/python3_venv/bin/activate
+
+python3 src/mk_png.py $indir $outdir
