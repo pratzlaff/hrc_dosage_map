@@ -123,7 +123,8 @@ def fits2png_matplotlib(infile, outfile):
         plt.close()
 
 def fits2png_fitspng(infile, outfile):
-    subprocess.run(['fitspng', '-s', '16', '-l', '0,1', '-o', outfile, infile])
+    subprocess.run(['fitspng', '-s', '16', '-o', outfile, infile])
+    subprocess.run(['mogrify', '-rotate', '270', outfile])
 
 def fits2png_ds9(infile, outfile):
     subprocess.run(['ds9',
