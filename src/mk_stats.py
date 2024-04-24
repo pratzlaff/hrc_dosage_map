@@ -17,8 +17,8 @@ def mk_stats(indir, outdir, det, subdet):
 
     expmaps = HRCExp.mk_zero_expmaps(det, subdet)
 
-    fa = open(f'{outdir}/hrc{det}-{subdet}_stats_acc', 'w')
-    fm = open(f'{outdir}/hrc{det}-{subdet}_stats_dff', 'w')
+    fa = open(f'{outdir}/hrc{det}{subdet}c_stats', 'w')
+    fm = open(f'{outdir}/hrc{det}{subdet}m_stats', 'w')
     nostats = [*['0']*3, '(1,1)', '0', '(1,1)', *['0']*3]
     lastats = ['1999', '8', *nostats]
 
