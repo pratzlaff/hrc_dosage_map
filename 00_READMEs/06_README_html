@@ -3,13 +3,14 @@
 . ~/python3_venv/bin/activate
 
 sdir=./test/whole/stats
-pngdir=./test/whole/png_fitspng
+pngdir=./test/whole/png_matplotlib
 outdir=./test/whole/html
 pdir=./test/whole/html/Plots
 
 rm -rf $outdir
 mkdir -p $outdir
-cp -a html/Plots $outdir
+cp -a ./html/Plots $outdir
+cp -a ./html/Image/* $pngdir
 ln -s ../../../$pngdir $outdir/Image
 python3 ./src/mk_plots.py $sdir $pdir
 python3 ./src/mk_html.py $sdir $pngdir $outdir

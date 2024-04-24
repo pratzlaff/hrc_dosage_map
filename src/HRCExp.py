@@ -67,6 +67,9 @@ subraw = {
     'i' : { 'x':[ [0], [16383] ], 'y':[ [0], [16383] ] }
 }
 
+def dets():
+    return list(subraw.keys())
+
 def nsubdets(det):
     return len(subraw[det]['x'][0])
 
@@ -105,19 +108,22 @@ def fits2png_matplotlib(infile, outfile):
         dmax = img.max()
         hcnt, bin_edges = np.histogram(img, bins=dmax, range=(0.5, dmax+0.5))
         hbin = 0.5*(bin_edges[1:] + bin_edges[:-1])
+        hsum = hcnt.sum()
         extent =  [hdr['CRVAL1P'], hdr['CRVAL1P']+img.shape[1]+0.5,
                    hdr['CRVAL2P'], hdr['CRVAL2P']+img.shape[0]+0.5 ]
-        im = plt.imshow(img, vmax=np.interp(0.95, hcnt, hbin), extent=extent, origin='lower')
+        im = plt.imshow(img, vmax=np.interp(0.95, np.cumsum(hcnt)/hsum, hbin), extent=extent, origin='lower')
         plt.xlabel('RAWX')
         plt.ylabel('RAWY')
         plt.colorbar(im)
-        plt.savefig(outfile, bbox_inches='tight')
+        fig = plt.gcf()
+        fig.set_size_inches(10.0, 10.0)
+        plt.savefig(outfile, bbox_inches='tight', dpi=200)
         plt.close()
     except:
         plt.close()
 
 def fits2png_fitspng(infile, outfile):
-    subprocess.run(['fitspng', '-s', '8', '-l', '0,1', '-o', outfile, infile])
+    subprocess.run(['fitspng', '-s', '16', '-l', '0,1', '-o', outfile, infile])
 
 def fits2png_ds9(infile, outfile):
     subprocess.run(['ds9',
@@ -387,3 +393,14 @@ def find_local_evt1(obsid):
         return files[0]
     else:
         raise Exception(f'no local evt1 file found for obsid {obsid:05d}')
+
+def read_stat_file(sdir, det, i, type):
+    sfile = f'{sdir}/hrc{det}{i}{type}_stats'
+    names = ('year', 'month', 'mean', 'std',
+             'min', 'minpos', 'max', 'maxpos',
+             's1', 's2', 's3')
+    formats = ('i2', 'i2', 'f4', 'f4',
+               'i4', '<U14', 'i4', '<U14',
+               'i2', 'i2', 'i2')
+    return np.loadtxt(sfile, unpack=True, dtype={'names':names, 'formats':formats})
+

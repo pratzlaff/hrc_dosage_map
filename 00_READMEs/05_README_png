@@ -5,4 +5,19 @@ outdir=./test/whole/png_matplotlib
 
 . ~/python3_venv/bin/activate
 
+screen -dmS mkpng bash -c 'exec bash'
+for type in c m
+do
+    det=i
+    for subdet in {0..0}
+    do
+	screen -S mkpng -X screen bash -c "time python3 src/mk_png.py $indir $outdir -d $det -s $subdet -t $type; exec bash"
+    done
+    det=s
+    for subdet in {0..2}
+    do
+	screen -S mkpng -X screen bash -c "time python3 src/mk_png.py $indir $outdir -d $det -s $subdet -t $type; exec bash"
+    done
+done
+screen -rS mkpng
 python3 src/mk_png.py $indir $outdir

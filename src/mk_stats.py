@@ -55,9 +55,9 @@ def mk_stats(indir, outdir, det, subdet):
                 f'({out[4]:.0f},{out[5]:.0f})',
                 f'{out[3]:d}',
                 f'({out[6]:.0f},{out[7]:.0f})',
-                f'{s1:5.1f}',
-                f'{s2:5.1f}',
-                f'{s3:5.1f}',
+                f'{s1:.0f}',
+                f'{s2:.0f}',
+                f'{s3:.0f}',
                 '\n']))
 
             expmaps[det][subdet] += img
@@ -72,9 +72,9 @@ def mk_stats(indir, outdir, det, subdet):
                 f'({out[4]:.0f},{out[5]:.0f})',
                 f'{out[3]:d}',
                 f'({out[6]:.0f},{out[7]:.0f})',
-                f'{s1:5.1f}',
-                f'{s2:5.1f}',
-                f'{s3:5.1f}',
+                f'{s1:.0f}',
+                f'{s2:.0f}',
+                f'{s3:.0f}',
             ]
             fa.write('\t'.join([*lastats, '\n']))
             
@@ -97,17 +97,15 @@ def sigma_values(img):
         v68 = int(0.68  * vsum)
         v95 = int(0.95  * vsum)
         v99 = int(0.997 * vsum)
-        sigma1 = -999
-        sigma2 = -999
-        sigma3 = -999
+        sigma1, sigma2, sigma3 = [0]*3
         acc= 0
         for i in range(hbin.size):
             acc += hcnt[i]
-            if acc > v68 and sigma1 < 0:
+            if acc > v68 and sigma1 == 0:
                 sigma1 = hbin[i]
-            elif acc > v95 and sigma2 < 0:
+            elif acc > v95 and sigma2 == 0:
                 sigma2 = hbin[i]
-            elif acc > v99 and sigma3 < 0:
+            elif acc > v99 and sigma3 == 0:
                 sigma3 = hbin[i]
                 break
     

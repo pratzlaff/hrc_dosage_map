@@ -20,10 +20,7 @@
 <h2>Cumulative HRC #INST# Section #SEC# (#YEAR# / #MONTH#)</h2>
 
 <div style='margin-left:auto;margin-right:auto;text-align:center;'>
-<img src='./hrc#INST##SEC#c_#LATEST#.png' style='width:90%;'>
-</div>
-
-<div style='padding-bottom:10px;'>
+<img src='#PNGLINK#' style='width:90%;'>
 </div>
 
 <b>
@@ -33,8 +30,8 @@
 #TOLINK#
 <a href='#SUBLINK#'>Back to Data Page</a>
 <br />
-<a href='https://cxc.cfa.harvard.edu/contrib/cxchrc/HRC_Exposure/hrc_exposure_map.html'>
-Back to Main Pange</a>
+<a href='../hrc_exposure_map.html'>
+Back to Main Page</a>
 
 </b>
 
