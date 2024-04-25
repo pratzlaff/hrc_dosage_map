@@ -12,12 +12,12 @@
 </style>
 
 
-<title>HRC #INST# Section #SEC# Image</title>
+<title>HRC-#CHIP# Image</title>
 
 </head>
 
 <body>
-<h2>Cumulative HRC #INST# Section #SEC# (#YEAR# / #MONTH#)</h2>
+<h2>Cumulative HRC-#CHIP# (#YEAR#-#MONTH#)</h2>
 
 <div style='margin-left:auto;margin-right:auto;text-align:center;'>
 <img src='#PNGLINK#' style='width:90%;'>

@@ -14,5 +14,5 @@ ln -s ../../$pngdir $outdir/Image
 python3 ./src/mk_plots.py $sdir $pdir
 python3 ./src/mk_html.py $sdir $pngdir $outdir
 
-# rsync -e 'ssh -p 1235' -avzn --delete $outdir/ localhost:/data/wdocs/rpete/HRC_Exposure --exclude Image
-# rsync -e 'ssh -p 1235' -avzn --delete $pngdir/ localhost:/data/wdocs/rpete/HRC_Exposure/Image
+rsync -e 'ssh -p 1235' -avzn --delete $outdir/ localhost:/data/wdocs/rpete/HRC_Exposure --exclude Image
+rsync -e 'ssh -p 1235' -avzn --delete $pngdir/ localhost:/data/wdocs/rpete/HRC_Exposure/Image

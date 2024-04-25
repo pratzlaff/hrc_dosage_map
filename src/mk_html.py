@@ -9,6 +9,8 @@ import time
 
 import HRCExp
 
+chips = { 'i':['I'], 's':['S1', 'S2', 'S3'] }
+
 def mk_html(sdir, pdir, tdir, outdir):
 
     HRCExp.mkdir_p(f'{outdir}/Sub_html')
@@ -35,6 +37,7 @@ def read_stat_file(sfile):
     return np.loadtxt(sfile, unpack=True, dtype={'names':names, 'formats':formats})
 
 def create_html_page(sdir, det, i, tdir, outdir):
+    global chips
     tdir = f'{tdir}/Templates'
 
     cdata = HRCExp.read_stat_file(sdir, det, i, 'c')
@@ -46,21 +49,21 @@ def create_html_page(sdir, det, i, tdir, outdir):
     hname = { 'i':'HRC I', 's':'HRC S' }[det]
     inst = f'hrc{det}'
 
-    aline += f'''<title>{hname} Section: {i} History Data</title>
+    aline += f'''<title>HRC-{chips[det][i]}: Historical Data</title>
 </head>
 <body style="color:white;background-color:black">
 <div><a href="../hrc_exposure_map.html">Back to Top</a>
-<h2 style="text-align:center">Data: {hname} Section: {i}
+<h2 style="text-align:center">Data: HRC-{chips[det][i]}
 '''
 
-    if nsub > 1:
-        if i == 0:
-            aline += f' (<a href="./{inst}{i+1}.html">Next</a>)'
-        elif i == nsub-1:
-            aline += f' (<a href="./{inst}{i-1}.html">Prev</a>)'
-        else:
-            aline += f' (<a href="./{inst}{i-1}.html">Prev</a> : <a href="./{inst}{i+1}.html">Next</a>)'
-
+    links = []
+    dets = HRCExp.dets()
+    dets.sort()
+    for d in dets:
+        for subdet in range(HRCExp.nsubdets(d)):
+            if (d != det or subdet != i):
+                links.append(f'<a href="./hrc{d}{subdet}.html">{chips[d][subdet]}</a>')
+    aline += '(' + ', '.join(links)+')'
     aline += '''</h2>
 <div style='padding-bottom:30px'>
 <table border=1>
@@ -191,6 +194,7 @@ def create_img_html(pdir, tdir, outdir, year=None, month=None, next_month=True):
     output: <web_dir>/Image/HRC<inst>/Month/HRC<inst>_<mm>_<yyyy>_<sec>.html
             <web_dir>/Image/HRC<inst>/Cumulative/HRC<inst>_08_1999_<mm>_<yyyy>_<sec>.html
     """
+    global chips
     tdir = f'{tdir}/Templates'
 #
 #--- find the current year/month
@@ -239,26 +243,21 @@ def create_img_html(pdir, tdir, outdir, year=None, month=None, next_month=True):
 #
             pnglink = f'../Image/hrc{inst}{sec}m_{ldate}.png'
 #
-#--- create link paths
+#--- chip links
 #
-            pfile = f'./hrc{inst}{sec}m_{pdate}.html'
-            nfile = f'./hrc{inst}{sec}m_{ndate}.html'
-            psfile = f'./hrc{inst}{sec-1}m_{ldate}.html'
-            nsfile = f'./hrc{inst}{sec+1}m_{ldate}.html'
-#
-#--- section link
-#
-            seclink = ''
-            if cstop>1:
-                if sec == 0:
-                    seclink = f'<a href="{nsfile}">Next Section</a><br />'
-                elif sec == cstop-1:
-                    seclink = f'<a href="{psfile}">Prev Section</a><br />'
-                else:
-                    seclink = f'<a href="{psfile}">Prev Section</a>  <a href="{nsfile}">next Section</a><br />'
+            links = []
+            dets = HRCExp.dets()
+            dets.sort()
+            for d in dets:
+                for subdet in range(HRCExp.nsubdets(d)):
+                    if (d != inst or subdet != sec):
+                        links.append(f'<a href="./hrc{d}{subdet}m_{ldate}.html">{chips[d][subdet]}</a>')
+            seclink = ' '.join(links)+'<br />'
 #
 #--- time order link
 #
+            pfile = f'./hrc{inst}{sec}m_{pdate}.html'
+            nfile = f'./hrc{inst}{sec}m_{ndate}.html'
             if year == 1999 and month == 8:
                 tolink = f'<a href="{nfile}">Next Month</a><br />'
             elif not next_month:
@@ -279,8 +278,7 @@ def create_img_html(pdir, tdir, outdir, year=None, month=None, next_month=True):
             otemp = monthly
             otemp = otemp.replace("#YEAR#",    f'{year}')
             otemp = otemp.replace("#MONTH#",   f'{month:02d}')
-            otemp = otemp.replace("#INST#",    inst.upper())
-            otemp = otemp.replace("#SEC#",     f'{sec}')
+            otemp = otemp.replace("#CHIP#",    chips[inst][sec])
             otemp = otemp.replace("#PNGLINK#", pnglink)
             otemp = otemp.replace("#LATEST#",  ldate)
             otemp = otemp.replace("#CUMLINK#", cumlink)
@@ -301,26 +299,21 @@ def create_img_html(pdir, tdir, outdir, year=None, month=None, next_month=True):
         nsec = HRCExp.nsubdets(inst)
         for sec in range(nsec):
 #
-#--- create link paths
+#--- chip links
+#
+            links = []
+            dets = HRCExp.dets()
+            dets.sort()
+            for d in dets:
+                for subdet in range(HRCExp.nsubdets(d)):
+                    if (d != inst or subdet != sec):
+                        links.append(f'<a href="./hrc{d}{subdet}c_{ldate}.html">{chips[d][subdet]}</a>')
+            seclink = ' '.join(links)+'<br />'
+#
+#--- time order links
 #
             pfile = f'./hrc{inst}{sec}c_{pdate}.html'
             nfile = f'./hrc{inst}{sec}c_{ndate}.html'
-            psfile = f'./hrc{inst}{sec-1}c_{ldate}.html'
-            nsfile = f'./hrc{inst}{sec+1}c_{ldate}.html'
-#
-#--- section link
-#
-            seclink = ''
-            if nsec>1:
-                if sec == 0:
-                    seclink = f'<a href="{nsfile}">Next Section</a><br />'
-                elif sec == cstop-1:
-                    seclink = f'<a href="{psfile}">Prev Section</a><br />'
-                else:
-                    seclink = f'<a href="{psfile}">Prev Section</a>  <a href="{nsfile}">Next Section</a><br />'
-#
-#--- time order link
-#
             if year == 1999 and month == 8:
                 tolink = f'<a href="{nfile}">Next Month</a><br />'
             elif not next_month:
@@ -344,8 +337,7 @@ def create_img_html(pdir, tdir, outdir, year=None, month=None, next_month=True):
             otemp = cumulative
             otemp = otemp.replace("#YEAR#",    f'{year}')
             otemp = otemp.replace("#MONTH#",   f'{month:02d}')
-            otemp = otemp.replace("#INST#",    inst.upper())
-            otemp = otemp.replace("#SEC#",     f'{sec}')
+            otemp = otemp.replace("#CHIP#",    chips[inst][sec])
             otemp = otemp.replace("#PNGLINK#", pnglink)
             otemp = otemp.replace("#MONLINK#", monlink)
             otemp = otemp.replace("#SECLINK#", seclink)
