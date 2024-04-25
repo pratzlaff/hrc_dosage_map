@@ -52,7 +52,7 @@ def plot_hrc_dose(cdata, mdata, ofile):
 
 
     ax4 = plt.subplot(3,2,4)
-    y = mdata[6]
+    y = cdata[6]
     plt.plot(x, y, lw=1, marker='+', markersize=1.5)
     plt.title('Maximum Cumulative')
 

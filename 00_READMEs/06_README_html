@@ -3,7 +3,7 @@
 . ~/python3_venv/bin/activate
 
 sdir=./outdir/stats
-pngdir=./outdir/png_ds9
+pngdir=./outdir/png
 outdir=./outdir/html
 pdir=./outdir/html/Plots
 
