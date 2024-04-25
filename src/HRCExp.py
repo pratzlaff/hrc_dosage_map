@@ -9,57 +9,6 @@ import re
 import shutil
 import subprocess
 
-# #
-# #--- reading directory list
-# #
-# path = '/data/legs/rpete/flight/hrc_exposure_map/Scripts/house_keeping/dir_list'
-# f    = open(path, 'r')
-# data = [line.strip() for line in f.readlines()]
-# f.close()
-
-# for ent in data:
-#     atemp = re.split(':', ent)
-#     var  = atemp[1].strip()
-#     line = atemp[0].strip()
-#     exec("%s = %s" %(var, line))
-
-# #
-# #--- setting sections for subdividing image
-# #
-# RAWX0 = {
-#     'HRC-S' : [0 for i in range(10)],
-#     'HRC-I' : (   1,    1,     1,  5462,  5462,  5462, 10924, 10924, 10924),
-# }
-# RAWX1 = {
-#     'HRC-S' : [4095 for i in range(10)],
-#     'HRC-I' : (5461, 5461 , 5461, 10923, 10923, 10923, 16385, 16385, 16385),
-# }
-# RAWY0 = {
-#     'HRC-S' : (   1, 4916,  9832, 14748, 19664, 24580, 29496, 34412, 39328, 44244),
-#     'HRC-I' : (   1, 5462, 10924,     1,  5462, 10924,     1,  5562, 10942),
-# }
-# RAWY1 = {
-#     'HRC-S' : (4915, 9831, 14747, 19663, 24579, 29495, 34411, 39327, 44243, 49159),
-#     'HRC-I' : (5461,10923, 16385,  5461, 10923, 16385,  5461, 10923, 16385),
-# }
-
-subraw = {
-    's' : { 'x':[[0]*10,
-                 [4095]*10
-                 ],
-            'y':[[1,4916,9832,14748,19664,24580,29496,34412,39328,44244],
-                 [4915,9831,14747,19663,24579,29495,34411,39327,44243,49159]
-                 ]
-           },
-    'i' : { 'x':[[1,1,1,5462,5462,5462,10924,10924,10924],
-                 [5461,5461,5461,10923,10923,10923,16385,16385,16385]
-                 ],
-            'y':[[1,5462,10924,1,5462,10924,1,5562,10942],
-                 [5461,10923,16385,5461,10923,16385,5461,10923,16385]
-                 ]
-           }
-}
-
 subraw = {
     's' : { 'x':[ [0]*3, [4095]*3 ],
             'y':[ [0, 16384, 32768], [16383, 32767, 49151] ]
@@ -127,17 +76,18 @@ def fits2png_fitspng(infile, outfile):
     subprocess.run(['mogrify', '-rotate', '270', outfile])
 
 def fits2png_ds9(infile, outfile, det):
-    detopts = { 's':['-geometry' '1024x512', '-rotate', '90'], 'i':['-geometry', '1024x1024', '-rotate', '45', '-colorbar', 'vertical'] }
-    subprocess.run(['ds9',
-                    infile,
-                    '-zoom', 'to', 'fit',
-                    '-scale', 'mode', '99.5',
-                    '-cmap', 'sls',
-                    '-colorbar', 'yes',
-                    '-colorbar', 'numerics', 'yes',
-                    *detopts[det],
-                    '-saveimage', 'png', outfile,
-                    '-exit']);
+    detopts = { 's':['-geometry', '1024x512', '-rotate', '90'], 'i':['-geometry', '1024x1024', '-rotate', '135', '-colorbar', 'vertical'] }
+    ds9_args = (['ds9',
+                 infile,
+                 *detopts[det],
+                 '-zoom', 'to', 'fit',
+                 '-scale', 'mode', '99.5',
+                 '-cmap', 'sls',
+                 '-colorbar', 'yes',
+                 '-colorbar', 'numerics', 'yes',
+                 '-saveimage', 'png', outfile,
+                 '-exit'])
+    subprocess.run(ds9_args)
 
 def fits_read_raw(fname):
     """Return RAW coordinates from an events list, status-filtered for
