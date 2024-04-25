@@ -3,7 +3,7 @@
 . ~/python3_venv/bin/activate
 
 sdir=./test/whole/stats
-pngdir=./test/whole/png_matplotlib
+pngdir=./test/whole/png_fitspng
 outdir=./test/whole/html
 pdir=./test/whole/html/Plots
 
