@@ -1,10 +1,13 @@
 #! /bin/bash
 
+. ~/.bash_aliases
+shopt -s expand_aliases
+. ~/python3_venv/bin/activate
+
 [ $# -eq 2 ] || {
     echo Usage: $0 outdir sname 1>&2
     exit 1
 }
-
 outdir="$1"
 sname="$2"
 
@@ -15,15 +18,9 @@ indirs=(
     [m]=./test/whole/monthly
 )
 
-. ~/python3_venv/bin/activate
-
 # ds9 cannot be run in parallel
 [[ $outdir =~ ds9 ]] && {
-
-    . ~/.bash_aliases
-    shopt -s expand_aliases
-
-    ciao -o
+    ciao
 
     for type in c m
     do
