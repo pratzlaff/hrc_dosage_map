@@ -14,17 +14,19 @@ sname="$2"
 declare -A indirs
 
 indirs=(
-    [c]=./test/whole/cumulative
-    [m]=./test/whole/monthly
+    [c]=./outdir/cumulative
+    [m]=./outdir/monthly
 )
 
 # ds9 cannot be run in parallel
 [[ $outdir =~ ds9 ]] && {
+    #Xvfb :101 -screen 0 1024x1024x24 2>/dev/null 1>&1 &
     ciao
 
     for type in c m
     do
 	indir=${indirs[$type]}
+	#time DISPLAY=:101 python3 src/mk_png.py $indir $outdir -d i -s 0 -t m --ds9
 	time python3 src/mk_png.py $indir $outdir --ds9
     done
     exit

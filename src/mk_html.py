@@ -9,10 +9,6 @@ import time
 
 import HRCExp
 
-    # hrc_dose_html_updates.hrc_dose_make_data_html()
-    # hrc_dose_html_updates.update_main_html()
-    # hrc_dose_html_updates.create_img_html()
-
 def mk_html(sdir, pdir, tdir, outdir):
 
     HRCExp.mkdir_p(f'{outdir}/Sub_html')
@@ -26,7 +22,7 @@ def mk_html(sdir, pdir, tdir, outdir):
     year, month = np.loadtxt(f'{sdir}/hrci0m_stats', usecols=(0,1), unpack=True,
                              dtype={'names':('year', 'month'), 'formats':('i2','i2')})
     for i in range(year.size):
-        create_img_html(pdir, tdir, outdir, year=year[i], month=month[i])
+        create_img_html(pdir, tdir, outdir, year=year[i], month=month[i], next_month=(i<year.size-1))
 
 def read_stat_file(sfile):
     names = ('year', 'month', 'mean', 'std',
@@ -187,7 +183,7 @@ def read_template(tdir, template):
 #-- create_img_html: create htmls to display exposure map                          --
 #------------------------------------------------------------------------------------
 
-def create_img_html(pdir, tdir, outdir, year=None, month=None):
+def create_img_html(pdir, tdir, outdir, year=None, month=None, next_month=True):
     """
     create htmls to display exposure map.
     input:  year    --- year, if it is not given, the last month is used
@@ -200,7 +196,6 @@ def create_img_html(pdir, tdir, outdir, year=None, month=None):
 #--- find the current year/month
 #
     cyear, cmonth = time.gmtime()[0:2]
-    chk = 0
 #
 #--- if the year and month were not passed, set them to those of the last month
 #
@@ -213,8 +208,6 @@ def create_img_html(pdir, tdir, outdir, year=None, month=None):
     else:
         year = int(year)
         month = int(month)
-        if year < cyear:
-            chk = 1
 #
 #--- set one month before and one month after
 #
@@ -268,7 +261,7 @@ def create_img_html(pdir, tdir, outdir, year=None, month=None):
 #
             if year == 1999 and month == 8:
                 tolink = f'<a href="{nfile}">Next Month</a><br />'
-            elif chk == 0:
+            elif not next_month:
                 tolink = f'<a href="{pfile}">Prev Month</a><br /> '
             else:
                 tolink = f'<a href="{pfile}">Prev Month</a>  <a href="{nfile}">Next Month</a><br />'
@@ -330,7 +323,7 @@ def create_img_html(pdir, tdir, outdir, year=None, month=None):
 #
             if year == 1999 and month == 8:
                 tolink = f'<a href="{nfile}">Next Month</a><br />'
-            elif chk == 0:
+            elif not next_month:
                 tolink = f'<a href="{pfile}">Prev Month</a><br /> '
             else:
                 tolink = f'<a href="{pfile}">Prev Month</a>  <a href="{nfile}">Next Month</a><br />'

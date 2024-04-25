@@ -1,7 +1,7 @@
 #! /bin/bash
 
-indir=./test/whole/monthly
-outdir=./test/whole/cumulative
+indir=./outdir/monthly
+outdir=./outdir/cumulative
 
 . ~/python3_venv/bin/activate
 

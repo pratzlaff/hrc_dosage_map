@@ -2,14 +2,17 @@
 
 . ~/python3_venv/bin/activate
 
-sdir=./test/whole/stats
-pngdir=./test/whole/png_ds9
-outdir=./test/whole/html
-pdir=./test/whole/html/Plots
+sdir=./outdir/stats
+pngdir=./outdir/png_ds9
+outdir=./outdir/html
+pdir=./outdir/html/Plots
 
 rm -rf $outdir
 mkdir -p $outdir
 cp -a ./html/Plots $outdir
-ln -s ../../../$pngdir $outdir/Image
+ln -s ../../$pngdir $outdir/Image
 python3 ./src/mk_plots.py $sdir $pdir
 python3 ./src/mk_html.py $sdir $pngdir $outdir
+
+# rsync -e 'ssh -p 1235' -avzn --delete $outdir/ localhost:/data/wdocs/rpete/HRC_Exposure --exclude Image
+# rsync -e 'ssh -p 1235' -avzn --delete $pngdir/ localhost:/data/wdocs/rpete/HRC_Exposure/Image

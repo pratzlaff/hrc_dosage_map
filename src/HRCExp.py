@@ -87,6 +87,7 @@ def fits2png_ds9(infile, outfile, det):
                  '-colorbar', 'numerics', 'yes',
                  '-saveimage', 'png', outfile,
                  '-exit'])
+    #print(' '.join(ds9_args))
     subprocess.run(ds9_args)
 
 def fits_read_raw(fname):
