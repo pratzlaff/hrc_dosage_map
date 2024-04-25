@@ -8,31 +8,44 @@ import sys
 
 import HRCExp
 
-def expmaps_cumulative(indir, outdir, check=False, det=None, subdet=None):
+def expmaps_cumulative(indir, outdir, check=False, det=None, subdet=None, year=None, month=None):
+
     if not check:
         HRCExp.mkdir_p(outdir)
 
-    y0, m0, y1, m1 = stop_start_months(indir, det, subdet)
-    if y1==y0:
-        nmonths = m1-m0+1
-    else:
-        nmonths = 13-m0+m1+ 12*(y1-y0-1)
-    sys.stderr.write(f'Summing {nmonths} months, from {y0}-{m0:02} to {y1}-{m1:02}.\n')
-
     expmaps = HRCExp.mk_zero_expmaps(det, subdet)
+
+    if (year):
+        y0 = y1 = year
+        m0 = m1 = month
+        pyear = year
+        pmonth = month-1
+        if month<1:
+            pyear -= 1
+            pmonth = 12
+        nmonths = 1
+
+        for det in expmaps:
+            for subdet in expmaps[det]:
+                print(det, subdet)
+                fname = f'{outdir}/hrc{det}{subdet}c_{pyear}-{pmonth:02}.fits.gz'
+                expmaps[det][subdet] += astropy.io.fits.open(fname)[0].data
+    else:
+        y0, m0, y1, m1 = stop_start_months(indir, det, subdet)
+        if y1==y0:
+            nmonths = m1-m0+1
+        else:
+            nmonths = 13-m0+m1+ 12*(y1-y0-1)
+            sys.stderr.write(f'Summing {nmonths} months, from {y0}-{m0:02} to {y1}-{m1:02}.\n')
 
     year, month = y0, m0
 
     for j in range(nmonths):
         sys.stderr.write(f'{year}-{month:02d}\n')
         for det in expmaps:
-
-            subdets = list(range(HRCExp.nsubdets(det)))
-            if subdet is not None:
-                subdets = [ subdet ]
-
-            for i in subdets:
-                fname = f'{indir}/hrc{det}{i}m_{year}-{month:02}.fits.gz'
+            for subdet in expmaps[det]:
+                print(det, subdet)
+                fname = f'{indir}/hrc{det}{subdet}m_{year}-{month:02}.fits.gz'
 
                 if not os.path.isfile(fname):
                     sys.stderr.write(f'Could not open {fname}, continuing without.\n')
@@ -43,7 +56,7 @@ def expmaps_cumulative(indir, outdir, check=False, det=None, subdet=None):
 
                 with astropy.io.fits.open(fname) as hdul:
                     img = hdul[0].data
-                    expmaps[det][i] += img
+                    expmaps[det][subdet] += img
 
         if not check:
             write_files(expmaps, y0, m0, year, month, outdir)
@@ -95,13 +108,21 @@ doing anything else.')
     parser.add_argument('-d', '--det', choices=['i', 's'], help='\
 Only calculate cumulative map for the given detector. Must be used \
 in conjunction with -i.')
-    parser.add_argument('-s', '--subdet', type=int, choices=range(10), help='\
+    parser.add_argument('-s', '--subdet', type=int, choices=range(3), help='\
 Only calculate cumulative map for the given subdetector region. Must \
 be used in conjunction with --det.')
+    parser.add_argument('-y', '--year', type=int, help='Process only the specified year and month.')
+    parser.add_argument('-m', '--month', type=int, help='Process only the specified year and month.')
     parser.add_argument('indir', help='Input directory.')
     parser.add_argument('outdir', help='Output directory.')
     args = parser.parse_args()
-    expmaps_cumulative(args.indir, args.outdir, check=args.check, det=args.det, subdet=args.subdet)
+    expmaps_cumulative(args.indir,
+                       args.outdir,
+                       check=args.check,
+                       det=args.det,
+                       subdet=args.subdet,
+                       year=args.year,
+                       month=args.month)
 
 if __name__ == '__main__':
     main()
