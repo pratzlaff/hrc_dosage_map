@@ -1,6 +1,6 @@
 #! /bin/bash
 
-[ $# -eq 3 ] || {
+[ $# -eq 2 ] || {
     echo Usage: $0 outdir sname 1>&2
     exit 1
 }
@@ -14,8 +14,6 @@ indirs=(
     [c]=./test/whole/cumulative
     [m]=./test/whole/monthly
 )
-
-outdir=./test/whole/png_ds9
 
 . ~/python3_venv/bin/activate
 
@@ -38,7 +36,7 @@ outdir=./test/whole/png_ds9
 mk_png_opts=
 
 [[ $outdir =~ matplotlib ]] && { mk_png_opts='--matplotlib'; }
-[[ $outdir =~ fitspng ]] && { mk_png_opts='--pngfits'; }
+[[ $outdir =~ fitspng ]] && { mk_png_opts='--fitspng'; }
 
 screen -dmS $sname bash -c 'exec bash'
 
