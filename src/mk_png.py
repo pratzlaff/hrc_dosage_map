@@ -20,9 +20,11 @@ def mk_png(indir, outdir, det, subdet, type, ds9, matplotlib, fitspng):
         ifile = ifiles[i]
         ofile = ofiles[i]
 
+        det = re.search('hrc([is])[0-2][cm]', ofile).groups()[0]
+
         sys.stderr.write(f'{ifile} -> {ofile}\n')
         if (ds9):
-            HRCExp.fits2png_ds9(ifile, ofile)
+            HRCExp.fits2png_ds9(ifile, ofile, det)
         if (matplotlib):
             HRCExp.fits2png_matplotlib(ifile, ofile)
         if (fitspng):

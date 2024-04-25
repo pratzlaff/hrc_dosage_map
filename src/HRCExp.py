@@ -126,18 +126,16 @@ def fits2png_fitspng(infile, outfile):
     subprocess.run(['fitspng', '-s', '16', '-o', outfile, infile])
     subprocess.run(['mogrify', '-rotate', '270', outfile])
 
-def fits2png_ds9(infile, outfile):
+def fits2png_ds9(infile, outfile, det):
+    detopts = { 's':['-geometry' '1024x512', '-rotate', '90'], 'i':['-geometry', '1024x1024', '-rotate', '45', '-colorbar', 'vertical'] }
     subprocess.run(['ds9',
                     infile,
-                    '-geometry', '760x1024',
                     '-zoom', 'to', 'fit',
                     '-scale', 'mode', '99.5',
                     '-cmap', 'sls',
                     '-colorbar', 'yes',
-                    '-colorbar', 'vertical',
                     '-colorbar', 'numerics', 'yes',
-                    '-colorbar', 'space', 'value',
-                    '-colorbar', 'fontsize', '12',
+                    *detopts[det],
                     '-saveimage', 'png', outfile,
                     '-exit']);
 
