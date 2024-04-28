@@ -11,12 +11,13 @@ def expmaps_monthly(year, month, outdir):
 
     expmaps = HRCExp.mk_zero_expmaps()
 
-    # HRC obsids within the specified year/month, and detector names
-    obsids, insts = HRCExp.year_month_obsids(year, month)
+    try:
+        obsids = HRCExp.year_month_obsids_archive(year, month)
+    except:
+        obsids = HRCExp.year_month_obsids_ocat(year, month)
 
     for i in range(obsids.size):
         obsid = obsids[i]
-        det = { 'HRC-I':'i', 'HRC-S':'s' }[insts[i]]
 
         archived=False
         try:
@@ -29,6 +30,7 @@ def expmaps_monthly(year, month, outdir):
                 sys.stderr.write(f'could not retrieve EVT1 file for obsid {obsid:05d}\n')
                 continue
 
+        det = { 'HRC-I':'i', 'HRC-S':'s' }[HRCExp.detnam(evt1)]
         sys.stderr.write(f'Processing: {evt1} : {det}\n')
         rawx, rawy = HRCExp.fits_read_raw(evt1)
         if archived:

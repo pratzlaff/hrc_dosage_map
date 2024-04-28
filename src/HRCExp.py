@@ -19,6 +19,10 @@ subraw = {
 def dets():
     return list(subraw.keys())
 
+def detnam(evt1):
+    with astropy.io.fits.open(evt1) as hdul:
+        return hdul[1].header['DETNAM']
+
 def nsubdets(det):
     return len(subraw[det]['x'][0])
 
@@ -304,10 +308,37 @@ def read_ocat():
                     years.append(int(m.groups()[1]))
     return np.array(obsids), np.array(years), np.array(months), np.array(inst)
 
-def year_month_obsids(year, month):
+def year_month_obsids_ocat(year, month):
     obsids, years, months, insts = read_ocat()
     mask = (years==year) & (months==month) & ((insts=='HRC-I')|(insts=='HRC-S'))
-    return obsids[mask], insts[mask]
+    return obsids[mask]
+
+def year_month_obsids_archive(year, month):
+    nyear = year
+    nmonth = month+1
+    if (nmonth > 12):
+        nmonth = 1
+        nyear += 1
+    input = f'''
+operation=browse
+dataset=flight
+detector=hrc
+filetype=evt1
+level=1
+tstart={year}-{month:02}-01T00:00:00
+tstop={nyear}-{nmonth:02}-01T00:00:00
+go
+'''
+    p = subprocess.Popen(
+        ['/proj/axaf/simul/bin/arc5gl', '-stdin'],
+        stdin=subprocess.PIPE,
+        stdout=subprocess.PIPE,
+    )
+    output = p.communicate(input=input.encode())[0].decode()
+    try:
+        return np.array([int(o) for o in re.findall(r'hrcf(\d{5})_.*evt1.fits', output)])
+    except:
+        raise Exception(f'no obsids found for {year}-{month:02d}')
 
 def retrieve_archived_evt1(obsid):
     input = f'''
