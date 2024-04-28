@@ -2,6 +2,8 @@
 
 indir=./outdir/monthly
 outdir=./outdir/cumulative
+indir=./outdir2/monthly
+outdir=./outdir2/cumulative
 
 . ~/python3_venv/bin/activate
 

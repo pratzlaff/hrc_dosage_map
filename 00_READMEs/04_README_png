@@ -1,59 +1,28 @@
 #! /bin/bash
 
-. ~/.bash_aliases
-shopt -s expand_aliases
-. ~/python3_venv/bin/activate
-
-[ $# -eq 2 ] || {
-    echo Usage: $0 outdir sname 1>&2
-    exit 1
-}
-outdir="$1"
-sname="$2"
-
 declare -A indirs
 
 indirs=(
     [c]=./outdir/cumulative
     [m]=./outdir/monthly
 )
+outdir=./outdir/png
+indirs=(
+    [c]=./outdir2/cumulative
+    [m]=./outdir2/monthly
+)
+outdir=./outdir2/png
 
-# ds9 cannot be run in parallel
-[[ $outdir =~ ds9 ]] && {
-    #Xvfb :101 -screen 0 1024x1024x24 2>/dev/null 1>&1 &
-    ciao
+. ~/.bash_aliases
+shopt -s expand_aliases
+ciao
 
-    for type in c m
-    do
-	indir=${indirs[$type]}
-	#time DISPLAY=:101 python3 src/mk_png.py $indir $outdir -d i -s 0 -t m --ds9
-	time python3 src/mk_png.py $indir $outdir --ds9
-    done
-    exit
-}
+. ~/python3_venv/bin/activate
 
-mk_png_opts=
-
-[[ $outdir =~ matplotlib ]] && { mk_png_opts='--matplotlib'; }
-[[ $outdir =~ fitspng ]] && { mk_png_opts='--fitspng'; }
-
-screen -dmS $sname bash -c 'exec bash'
-
+#Xvfb :101 -screen 0 1024x1024x24 2>/dev/null 1>&1 &
 for type in c m
 do
     indir=${indirs[$type]}
-
-    det=i
-    for subdet in {0..0}
-    do
-	screen -S $sname -X screen bash -c "time python3 src/mk_png.py $mk_png_opts $indir $outdir -d $det -s $subdet -t $type; exec bash"
-    done
-
-    det=s
-    for subdet in {0..2}
-    do
-	screen -S $sname -X screen bash -c "time python3 src/mk_png.py $mk_png_opts $indir $outdir -d $det -s $subdet -t $type; exec bash"
-    done
+    #time DISPLAY=:101 python3 src/mk_png.py $indir $outdir -d i -s 0 -t m --ds9
+    time python3 src/mk_png.py $indir $outdir --ds9
 done
-
-screen -rS $sname

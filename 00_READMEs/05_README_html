@@ -6,6 +6,10 @@ sdir=./outdir/stats
 pngdir=./outdir/png
 outdir=./outdir/html
 pdir=./outdir/html/Plots
+sdir=./outdir2/stats
+pngdir=./outdir2/png
+outdir=./outdir2/html
+pdir=./outdir2/html/Plots
 
 rm -rf $outdir
 mkdir -p $outdir

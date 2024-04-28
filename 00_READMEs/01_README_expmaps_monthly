@@ -1,6 +1,7 @@
 #! /bin/bash
 
 outdir=./outdir/monthly
+outdir=./outdir2/monthly
 
 . ~/python3_venv/bin/activate
 
