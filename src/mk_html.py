@@ -11,20 +11,31 @@ import HRCExp
 
 chips = { 'i':['I'], 's':['S1', 'S2', 'S3'] }
 
+def read_year_month(sfile):
+    return np.loadtxt(sfile,
+                      usecols=(0,1),
+                      unpack=True,
+                      dtype={'names':('year', 'month'),
+                             'formats':('i2','i2')
+                             }
+                      )
+
 def mk_html(sdir, pdir, tdir, outdir):
 
     HRCExp.mkdir_p(f'{outdir}/Sub_html')
 
     for det in HRCExp.subraw:
-        nsub = len(HRCExp.subraw[det]['x'][0])
-        for i in range(nsub):
+        for i in range(HRCExp.nsubdets(det)):
             create_html_page(sdir, det, i, tdir, outdir)
-    update_main_html(sdir, tdir, outdir)
 
-    year, month = np.loadtxt(f'{sdir}/hrci0m_stats', usecols=(0,1), unpack=True,
-                             dtype={'names':('year', 'month'), 'formats':('i2','i2')})
+    create_main_html(sdir, tdir, outdir)
+
+    year, month = read_year_month(f'{sdir}/hrci0m_stats')
     for i in range(year.size):
-        create_img_html(pdir, tdir, outdir, year=year[i], month=month[i], next_month=(i<year.size-1))
+        create_img_html(pdir, tdir, outdir,
+                        year=year[i], month=month[i],
+                        next_month=(i<year.size-1)
+                        )
 
 def read_stat_file(sfile):
     names = ('year', 'month', 'mean', 'std',
@@ -33,7 +44,6 @@ def read_stat_file(sfile):
     formats = ('i2', 'i2', 'f4', 'f4',
                'i4', '<U14', 'i4', '<U14',
                'i2', 'i2', 'i2')
-
     return np.loadtxt(sfile, unpack=True, dtype={'names':names, 'formats':formats})
 
 def create_html_page(sdir, det, i, tdir, outdir):
@@ -43,7 +53,6 @@ def create_html_page(sdir, det, i, tdir, outdir):
     cdata = HRCExp.read_stat_file(sdir, det, i, 'c')
     mdata = HRCExp.read_stat_file(sdir, det, i, 'm')
 
-    nsub = HRCExp.nsubdets(det)
     aline  = read_template(tdir, 'sub_top1')
 
     hname = { 'i':'HRC I', 's':'HRC S' }[det]
@@ -145,12 +154,7 @@ def create_html_page(sdir, det, i, tdir, outdir):
 #-- update_main_html: update the top html page                                     --
 #------------------------------------------------------------------------------------
 
-def update_main_html(sdir, tdir, outdir):
-    """
-    update the top html page --- changes are just updated date
-    input:  none, but read from <house_keeping>/exp_template
-    output: <web_dir>/exposure.html
-    """
+def create_main_html(sdir, tdir, outdir):
     tdir = f'{tdir}/Templates'
 #
 #--- display date
@@ -161,12 +165,10 @@ def update_main_html(sdir, tdir, outdir):
 #
 #--- link date for the most recent plots
 #
-    [lyear, lmon] = find_last_entry_data(sdir)
-
-    line = f'{lyear}-{lmon:02d}'
+    lyear, lmon = find_last_entry_data(sdir)
 
     data  = read_template(tdir, 'main_page')
-    data  = data.replace('#LATEST#', line)
+    data  = data.replace('#LATEST#', f'{lyear}-{lmon:02d}')
     data  = data.replace('#UPDATE#', today)
 
     ofile = f'{outdir}/hrc_exposure_map.html'
@@ -174,8 +176,7 @@ def update_main_html(sdir, tdir, outdir):
         fo.write(data)
 
 def find_last_entry_data(sdir):
-    year, month = np.loadtxt(f'{sdir}/hrci0m_stats', usecols=(0,1), unpack=True,
-                             dtype={'names':('year', 'month'), 'formats':('i2','i2')})
+    year, month = read_year_month(f'{sdir}/hrci0m_stats')
     return year[-1], month[-1]
 
 def read_template(tdir, template):
@@ -234,7 +235,10 @@ def create_img_html(pdir, tdir, outdir, year=None, month=None, next_month=True):
     ndate  = f'{nyear}-{nmonth:02d}'
 
     monthly = read_template(tdir, 'mon_img_page')
-    for inst in HRCExp.dets():
+
+    dets = HRCExp.dets()
+    dets.sort()
+    for inst in dets:
         cstop = HRCExp.nsubdets(inst)
 
         for sec in range(cstop):
