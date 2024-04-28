@@ -47,11 +47,8 @@ def expmaps_cumulative(indir, outdir, check=False, det=None, subdet=None, year=N
                 print(det, subdet)
                 fname = f'{indir}/hrc{det}{subdet}m_{year}-{month:02}.fits.gz'
 
-                if not os.path.isfile(fname):
-                    sys.stderr.write(f'Could not open {fname}, continuing without.\n')
-                    continue
-
-                if check:
+                if not os.path.isfile(fname) and check:
+                    sys.stderr.write(f'missing: {fname}\n')
                     continue
 
                 with astropy.io.fits.open(fname) as hdul:
