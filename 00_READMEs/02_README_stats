@@ -1,9 +1,12 @@
 #! /bin/bash
 
+false && {
+  echo 'This script recreates the statistics files.' 1>&2
+  exit
+}
+
 indir=./outdir/monthly
 outdir=./outdir/stats
-indir=./outdir2/monthly
-outdir=./outdir2/stats
 
 . ~/python3_venv/bin/activate
 

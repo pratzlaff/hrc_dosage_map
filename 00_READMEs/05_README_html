@@ -1,15 +1,16 @@
 #! /bin/bash
 
+false && {
+  echo 'This script recreates the HTML files.' 1>&2
+  exit
+}
+
 . ~/python3_venv/bin/activate
 
 sdir=./outdir/stats
 pngdir=./outdir/png
 outdir=./outdir/html
 pdir=./outdir/html/Plots
-sdir=./outdir2/stats
-pngdir=./outdir2/png
-outdir=./outdir2/html
-pdir=./outdir2/html/Plots
 
 rm -rf $outdir
 mkdir -p $outdir
@@ -18,5 +19,5 @@ ln -s ../../$pngdir $outdir/Image
 python3 ./src/mk_plots.py $sdir $pdir
 python3 ./src/mk_html.py $sdir $pngdir $outdir
 
-#rsync -e 'ssh -p 1235' -avzn --delete $outdir/ localhost:/data/wdocs/rpete/HRC_Exposure --exclude Image
-#rsync -e 'ssh -p 1235' -avzn --delete $pngdir/ localhost:/data/wdocs/rpete/HRC_Exposure/Image
+echo "rsync -e 'ssh -p 1235' -avzn --delete $outdir/ localhost:/data/wdocs/rpete/HRC_Exposure --exclude Image"
+echo "rsync -e 'ssh -p 1235' -avzn --delete $pngdir/ localhost:/data/wdocs/rpete/HRC_Exposure/Image"

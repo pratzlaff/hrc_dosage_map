@@ -1,7 +1,11 @@
 #! /bin/bash
 
+true && {
+  echo 'This script recreates every monthly exposure map.' 1>&2
+  exit
+}
+
 outdir=./outdir/monthly
-outdir=./outdir2/monthly
 
 . ~/python3_venv/bin/activate
 
