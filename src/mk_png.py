@@ -22,9 +22,9 @@ def mk_png(indir, outdir, det, subdet, type, year, month, ds9, matplotlib, fitsp
 
         if os.path.isfile(ofile) and os.path.getmtime(ifile) < os.path.getmtime(ofile):
             if not clobber:
-                sys.stderr.write(f'{ofile} exists and has mtime greater then {ifile}, skipping. Use --clobber to override\n')
+                sys.stderr.write(f'{ofile} exists and has mtime greater than {ifile}, skipping. Use --clobber to override\n')
                 continue
-        sys.stderr.write(f'{ifile} -> {ofile}\n')
+        print(f'{ifile} -> {ofile}')
 
         det = re.search('hrc([is])[0-2][cm]', ofile).groups()[0]
 
