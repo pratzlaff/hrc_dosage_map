@@ -8,7 +8,7 @@ import sys
 
 import HRCExp
 
-def mk_png(indir, outdir, det, subdet, type, year, month, ds9, matplotlib, fitspng):
+def mk_png(indir, outdir, det, subdet, type, year, month, ds9, matplotlib, fitspng, clobber):
     HRCExp.mkdir_p(outdir)
 
     ifiles = glob.glob(f'{indir}/hrc{det}{subdet}{type}_{year}-{month}.fits.gz')
@@ -20,9 +20,14 @@ def mk_png(indir, outdir, det, subdet, type, year, month, ds9, matplotlib, fitsp
         ifile = ifiles[i]
         ofile = ofiles[i]
 
+        if os.path.isfile(ofile) and os.path.getmtime(ifile) < os.path.getmtime(ofile):
+            if not clobber:
+                sys.stderr.write(f'{ofile} exists and has mtime greater then {ifile}, skipping. Use --clobber to override\n')
+                continue
+        sys.stderr.write(f'{ifile} -> {ofile}\n')
+
         det = re.search('hrc([is])[0-2][cm]', ofile).groups()[0]
 
-        sys.stderr.write(f'{ifile} -> {ofile}\n')
         if (ds9):
             HRCExp.fits2png_ds9(ifile, ofile, det)
         if (matplotlib):
@@ -44,9 +49,10 @@ def main():
     parser.add_argument('--ds9', action='store_true')
     parser.add_argument('--matplotlib', action='store_true')
     parser.add_argument('--fitspng', action='store_true')
+    parser.add_argument('--clobber', action='store_true', help='Overwrite even if outfile already exists and has mtime later than infile.')
 
     args = parser.parse_args()
-    mk_png(args.indir, args.outdir, args.det, args.subdet, args.type, args.year, args.month, args.ds9, args.matplotlib, args.fitspng)
+    mk_png(args.indir, args.outdir, args.det, args.subdet, args.type, args.year, args.month, args.ds9, args.matplotlib, args.fitspng, args.clobber)
 
 if __name__ == '__main__':
     main()
