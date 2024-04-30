@@ -5,8 +5,19 @@ false && {
   exit
 }
 
-indir=./outdir/monthly
-outdir=./outdir/stats
+set -e
+set -o pipefail
+
+[ $# -lt 2 ] || {
+    echo "Usage: $0 [basedir]" 1>&2
+    exit 1
+}
+
+basedir=./outdir
+[ $# -eq 1 ] && basedir="$1"
+
+indir="$basedir"/monthly
+outdir="$basedir"/stats
 
 . ~/python3_venv/bin/activate
 

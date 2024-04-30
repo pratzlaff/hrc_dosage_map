@@ -5,13 +5,24 @@ false && {
   exit
 }
 
+set -e
+set -o pipefail
+
+[ $# -lt 2 ] || {
+    echo "Usage: $0 [basedir]" 1>&2
+    exit 1
+}
+
+basedir=./outdir
+[ $# -eq 1 ] && basedir="$1"
+
 declare -A indirs
 
 indirs=(
-    [c]=./outdir/cumulative
-    [m]=./outdir/monthly
+    [c]="$basedir"/cumulative
+    [m]="$basedir"/monthly
 )
-outdir=./outdir/png
+outdir="$basedir"/png
 
 . ~/.bash_aliases
 shopt -s expand_aliases

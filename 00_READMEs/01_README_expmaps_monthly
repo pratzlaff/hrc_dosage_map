@@ -5,6 +5,9 @@ true && {
   exit
 }
 
+set -e
+set -o pipefail
+
 outdir=./outdir/monthly
 
 . ~/python3_venv/bin/activate

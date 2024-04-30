@@ -5,12 +5,23 @@ false && {
   exit
 }
 
+set -e
+set -o pipefail
+
+[ $# -lt 2 ] || {
+    echo "Usage: $0 [basedir]" 1>&2
+    exit 1
+}
+
+basedir=./outdir
+[ $# -eq 1 ] && basedir="$1"
+
 . ~/python3_venv/bin/activate
 
-sdir=./outdir/stats
-pngdir=./outdir/png
-outdir=./outdir/html
-pdir=./outdir/html/Plots
+sdir="$basedir"/stats
+pngdir="$basedir"/png
+outdir="$basedir"/html
+pdir="$basedir"/html/Plots
 
 rm -rf $outdir
 mkdir -p $outdir
@@ -19,5 +30,5 @@ ln -s ../../$pngdir $outdir/Image
 python3 ./src/mk_plots.py $sdir $pdir
 python3 ./src/mk_html.py $sdir $pngdir $outdir
 
-echo "rsync -e 'ssh -p 1235' -avzn --delete $outdir/ localhost:/data/wdocs/rpete/HRC_Exposure --exclude Image"
+echo "rsync -e 'ssh -p 1235' -avzn --delete $basedir/ localhost:/data/wdocs/rpete/HRC_Exposure --exclude Image"
 echo "rsync -e 'ssh -p 1235' -avzn --delete $pngdir/ localhost:/data/wdocs/rpete/HRC_Exposure/Image"

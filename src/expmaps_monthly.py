@@ -15,6 +15,7 @@ def expmaps_monthly(year, month, outdir):
         obsids = HRCExp.year_month_obsids_archive(year, month)
     except:
         obsids = HRCExp.year_month_obsids_ocat(year, month)
+    print(obsids)
 
     for i in range(obsids.size):
         obsid = obsids[i]

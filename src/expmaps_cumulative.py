@@ -20,14 +20,13 @@ def expmaps_cumulative(indir, outdir, check=False, det=None, subdet=None, year=N
         m0 = m1 = month
         pyear = year
         pmonth = month-1
-        if month<1:
+        if pmonth<1:
             pyear -= 1
             pmonth = 12
         nmonths = 1
 
         for det in expmaps:
             for subdet in expmaps[det]:
-                print(det, subdet)
                 fname = f'{outdir}/hrc{det}{subdet}c_{pyear}-{pmonth:02}.fits.gz'
                 expmaps[det][subdet] += astropy.io.fits.open(fname)[0].data
     else:

@@ -1,0 +1,59 @@
+#! /bin/bash
+
+set -e
+set -o pipefail
+
+#
+# Generates exposure map for the specified year/month.
+#
+# Assumes the previous month's exposure map already exists and creates
+# the new cumulative exposure map, updates the PNG and HTML
+# directories.
+#
+
+basedir=./test
+
+[ $# -eq 2 ] || {
+    echo "Usage: $0 year month" 1>&2
+    exit 1
+}
+
+year="$1"
+month="$2"
+
+[ -f "$basedir"/cumulative/hrci0c_${year}-$(printf %02d $month).fits.gz ] && {
+    echo "'$basedir/cumulative/hrci0c_${year}-$(printf %02d $month).fits.gz' already exists" 1>&2
+    exit 1
+}
+
+lmonth=$month
+lyear=$year
+[ $lmonth -eq 1 ] && {
+    (( lyear-- ))
+    lmonth=12
+} || {
+    (( lmonth-- ))
+}
+
+[ -f "$basedir"/cumulative/hrci0c_${lyear}-$(printf %02d $lmonth).fits.gz ] || {
+    echo "'$basedir/cumulative/hrci0c_${lyear}-$(printf %02d $lmonth).fits.gz' doesn't exist" 1>&2
+    exit 1
+}
+
+. ~/python3_venv/bin/activate
+
+python3 ./src/expmaps_monthly.py $year $month "$basedir"/monthly
+
+/bin/bash ./00_READMEs/02_README_stats "$basedir"
+
+python3 ./src/expmaps_cumulative.py \
+	-y $year -m $month \
+	"$basedir"/monthly \
+	"$basedir"/cumulative
+
+/bin/bash ./00_READMEs/04_README_png "$basedir"
+
+/bin/bash ./00_READMEs/05_README_html "$basedir"
+
+
+
