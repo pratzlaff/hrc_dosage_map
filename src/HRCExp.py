@@ -275,7 +275,7 @@ def change_month_format(month):
 
 def read_ocat():
     ocat='/data/mta4/obs_ss/sot_ocat.out'
-    ocat='/data/legs/rpete/flight/hrc_exposure_map/Scripts/house_keeping/sot_ocat.out'
+    ocat='/data/legs/rpete/flight/hrc_exposure_map/obsolete/Scripts/house_keeping/sot_ocat.out'
     mdict = {
         'Jan':1,
         'Feb':2,
