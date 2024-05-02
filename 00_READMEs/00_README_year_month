@@ -11,7 +11,13 @@ set -o pipefail
 # directories.
 #
 
-basedir=./test
+basedir=./outdir
+false && {
+    rm -rf test
+    mkdir -p test/cumulative
+    cp -a outdir/{stats,png,monthly} ./test
+    cp -a ./outdir/cumulative/*2024-03* ./test/cumulative
+}
 
 [ $# -eq 2 ] || {
     echo "Usage: $0 year month" 1>&2
@@ -44,11 +50,6 @@ lyear=$year
 
 python3 ./src/expmaps_monthly.py $year $month "$basedir"/monthly
 
-python3 ./src/expmaps_cumulative.py \
-	-y $year -m $month \
-	"$basedir"/monthly \
-	"$basedir"/cumulative
-
 det=i; subdet=0
 python3 ./src/mk_stats.py \
 	-c "$basedir"/cumulative \
@@ -58,16 +59,18 @@ python3 ./src/mk_stats.py \
 det=s
 for subdet in {0..2}
 do
-    python3 ./src/mk_stats.py \
+     python3 ./src/mk_stats.py \
 	    -c "$basedir"/cumulative \
 	    "$basedir"/monthly \
 	    "$basedir"/stats \
 	    $det $subdet
 done
 
+python3 ./src/expmaps_cumulative.py \
+	-y $year -m $month \
+	"$basedir"/monthly \
+	"$basedir"/cumulative
+
 /bin/bash ./00_READMEs/04_README_png "$basedir"
 
 /bin/bash ./00_READMEs/05_README_html "$basedir"
-
-
-

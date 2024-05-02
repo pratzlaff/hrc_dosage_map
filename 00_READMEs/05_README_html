@@ -30,5 +30,5 @@ ln -s ../../$pngdir $outdir/Image
 python3 ./src/mk_plots.py $sdir $pdir
 python3 ./src/mk_html.py $sdir $pngdir $outdir
 
-echo "rsync -e 'ssh -p 1235' -avzn --delete $basedir/ localhost:/data/wdocs/rpete/HRC_Exposure --exclude Image"
-echo "rsync -e 'ssh -p 1235' -avzn --delete $pngdir/ localhost:/data/wdocs/rpete/HRC_Exposure/Image"
+echo "rsync -e 'ssh -p 1235' -avzn --delete $outdir/ localhost:/data/wdocs/rpete/HRC_Exposure --exclude Image | less"
+echo "rsync -e 'ssh -p 1235' -avn --delete $pngdir/ localhost:/data/wdocs/rpete/HRC_Exposure/Image | less"
