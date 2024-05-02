@@ -2,12 +2,17 @@ import argparse
 import astropy.io.fits
 import glob
 import numpy as np
+import os
 import re
 import sys
 
 import HRCExp
 
-def mk_stats(indir, outdir, det, subdet):
+def expmap_year_month(fname):
+    year, month = re.search(r'(\d{4})-(\d{2})', fname).groups()[0:2]
+    return int(year), int(month)
+
+def mk_stats(indir, outdir, det, subdet, cdir):
     HRCExp.mkdir_p(outdir)
     files = glob.glob(f'{indir}/hrc{det}{subdet}m_[0-9][0-9][0-9][0-9]-[0-9][0-9].fits.gz')
     files.sort()
@@ -15,77 +20,129 @@ def mk_stats(indir, outdir, det, subdet):
         sys.stderr.write(f'no files found in {indir} for detector {det}:{subdet}\n')
         sys.exit(0)
 
+    y0, m0 = expmap_year_month(files[0])
+    y1, m1 = expmap_year_month(files[-1])
+
+    if y1==y0:
+        nmonths = m1-m0+1
+    else:
+        nmonths = 13-m0+m1+ 12*(y1-y0-1)
+
+    if (nmonths != len(files)):
+        sys.stderr.write(f'Expecting {nmonths} expmap files, only see {len(files)}.\n')
+        sys.exit(1)
+
+    fcfile = f'{outdir}/hrc{det}{subdet}c_stats'
+    fmfile = f'{outdir}/hrc{det}{subdet}m_stats'
+    nostats = [*['0']*3, '(1,1)', '0', '(1,1)', *['0']*3]
+
     expmaps = HRCExp.mk_zero_expmaps(det, subdet)
 
-    fa = open(f'{outdir}/hrc{det}{subdet}c_stats', 'w')
-    fm = open(f'{outdir}/hrc{det}{subdet}m_stats', 'w')
-    nostats = [*['0']*3, '(1,1)', '0', '(1,1)', *['0']*3]
-    lastats = ['1999', '8', *nostats]
+    # append mode
+    if (os.path.isfile(fcfile) and os.path.isfile(fmfile)):
+        if cdir is None:
+            sys.stderr.write(f'Going into append mode, but --cdir unspecified.\n')
+            sys.exit(1)
+        cstats = HRCExp.read_stat_file(outdir, det, subdet, 'c')
+        mstats = HRCExp.read_stat_file(outdir, det, subdet, 'm')
 
-    for fname in files:
-        sys.stderr.write(f'{fname}\n')
-        year, month = re.search(r'(\d{4})-(\d{2})', fname).groups()[0:2]
-        year = int(year)
-        month = int(month)
-        with astropy.io.fits.open(fname) as hdul:
-            img = hdul[0].data
-            # if there were no observations during a month, will throw a
-            # ValuError when calling numpy.histogram with nbins=0
-            try:
-                s1, s2, s3 = sigma_values(img)
-            except:
-                fm.write('\t'.join([f'{year}',f'{month}',*nostats,'\n']))
-                fa.write('\t'.join([*lastats, '\n']))
-                if month==12:
-                    lastats[0] = f'{year+1}'
-                    lastats[1] = '1'
-                else:
-                    lastats[1] = f'{month+1}'
-                fm.flush()
-                fa.flush()
-                continue
-            out = HRCExp.stats_img(img, det, subdet)
+        # previous year and month
+        py = cstats[0][-1]
+        pm = cstats[1][-1]
 
-            fm.write('\t'.join([
-                f'{year}',
-                f'{month}',
-                f'{out[0]:5.6f}',
-                f'{out[1]:5.6f}',
-                f'{out[2]:d}',
-                f'({out[4]:.0f},{out[5]:.0f})',
-                f'{out[3]:d}',
-                f'({out[6]:.0f},{out[7]:.0f})',
-                f'{s1:.0f}',
-                f'{s2:.0f}',
-                f'{s3:.0f}',
-                '\n']))
+        y0 = py
+        m0 = pm+1
+        if (m0 > 12):
+            y0 += 1
+            m0 = 1
 
-            expmaps[det][subdet] += img
-            out = HRCExp.stats_img(expmaps[det][subdet], det, subdet)
-            s1, s2, s3 = sigma_values(expmaps[det][subdet])
-            lastats = [
-                f'{year}',
-                f'{month}',
-                f'{out[0]:5.6f}',
-                f'{out[1]:5.6f}',
-                f'{out[2]:d}',
-                f'({out[4]:.0f},{out[5]:.0f})',
-                f'{out[3]:d}',
-                f'({out[6]:.0f},{out[7]:.0f})',
-                f'{s1:.0f}',
-                f'{s2:.0f}',
-                f'{s3:.0f}',
-            ]
-            fa.write('\t'.join([*lastats, '\n']))
-            
+        if y1==y0:
+            nmonths = m1-m0+1
+        else:
+            nmonths = 13-m0+m1+ 12*(y1-y0-1)
+        files=files[len(files)-nmonths:]
+
+        if (py!=mstats[0][-1] or pm==mstats[0][-1]):
+            sys.stderr.write(f'Pre-existing cumulative and monthly stats files are incompatible.\n')
+            sys.exit(1)
+
+        lcstats = [str(cstats[i][-1]) for i in range(len(cstats))]
+        lcstats[0] = f'{y0}'
+        lcstats[1] = f'{m0}'
+
+        fm = open(fmfile, 'a')
+        fc = open(fcfile, 'a')
+        fname = f'{cdir}/hrc{det}{subdet}c_{py}-{pm:02}.fits.gz'
+        expmaps[det][subdet] += astropy.io.fits.open(fname)[0].data
+
+    else:
+        fm = open(fmfile, 'w')
+        fc = open(fcfile, 'w')
+        lcstats = ['1999', '8', *nostats]
+
+    year, month = y0, m0
+    for i in range(nmonths):
+        sys.stderr.write(f'{files[i]}\n')
+        year, month = expmap_year_month(files[i])
+        img = astropy.io.fits.open(files[i])[0].data
+        # if there were no observations during a month, will throw a
+        # ValuError when calling numpy.histogram with nbins=0
+        try:
+            s1, s2, s3 = sigma_values(img)
+        except:
+            fm.write('\t'.join([f'{year}',f'{month}',*nostats,'\n']))
+            fc.write('\t'.join([*lcstats, '\n']))
             if month==12:
-                lastats[0] = f'{year+1}'
-                lastats[1] = '1'
+                lcstats[0] = f'{year+1}'
+                lcstats[1] = '1'
             else:
-                lastats[1] = f'{month+1}'
-
+                lcstats[1] = f'{month+1}'
             fm.flush()
-            fa.flush()
+            fc.flush()
+            continue
+
+        out = HRCExp.stats_img(img, det, subdet)
+
+        fm.write('\t'.join([
+            f'{year}',
+            f'{month}',
+            f'{out[0]:5.6f}',
+            f'{out[1]:5.6f}',
+            f'{out[2]:d}',
+            f'({out[4]:.0f},{out[5]:.0f})',
+            f'{out[3]:d}',
+            f'({out[6]:.0f},{out[7]:.0f})',
+            f'{s1:.0f}',
+            f'{s2:.0f}',
+            f'{s3:.0f}',
+            '\n']))
+
+        expmaps[det][subdet] += img
+        out = HRCExp.stats_img(expmaps[det][subdet], det, subdet)
+        s1, s2, s3 = sigma_values(expmaps[det][subdet])
+        lcstats = [
+            f'{year}',
+            f'{month}',
+            f'{out[0]:5.6f}',
+            f'{out[1]:5.6f}',
+            f'{out[2]:d}',
+            f'({out[4]:.0f},{out[5]:.0f})',
+            f'{out[3]:d}',
+            f'({out[6]:.0f},{out[7]:.0f})',
+            f'{s1:.0f}',
+            f'{s2:.0f}',
+            f'{s3:.0f}',
+        ]
+        fc.write('\t'.join([*lcstats, '\n']))
+
+        if month==12:
+            lcstats[0] = f'{year+1}'
+            lcstats[1] = '1'
+        else:
+            lcstats[1] = f'{month+1}'
+
+        fm.flush()
+        fc.flush()
 
 def sigma_values(img):
     dmax = img.max()
@@ -117,13 +174,14 @@ def main():
     parser = argparse.ArgumentParser(
         description='Combine monthly exposure maps.'
     )
+    parser.add_argument('-c', '--cdir', help='Cumulative exposure map directory, required for append mode.')
     parser.add_argument('indir', help='Input directory.')
     parser.add_argument('outdir', help='Output directory.')
     parser.add_argument('det', choices=['i', 's'], help='Detector.')
     parser.add_argument('subdet', type=int, choices=list(range(10)), help='Subdetector.')
     
     args = parser.parse_args()
-    mk_stats(args.indir, args.outdir,  args.det, args.subdet)
+    mk_stats(args.indir, args.outdir,  args.det, args.subdet, args.cdir)
 
 if __name__ == '__main__':
     main()

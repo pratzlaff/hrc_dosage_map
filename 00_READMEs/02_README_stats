@@ -17,19 +17,21 @@ basedir=./outdir
 [ $# -eq 1 ] && basedir="$1"
 
 indir="$basedir"/monthly
+cdir="$basedir"/cumulative
 outdir="$basedir"/stats
 
 . ~/python3_venv/bin/activate
 
 screen -dmS stats bash -c 'exec bash'
+
 det=i
-for subdet in {0..0}
-do
-  screen -S stats -X screen bash -c "time python3 src/mk_stats.py $indir $outdir $det $subdet; exec bash"
-done
+subdet=0
+screen -S stats -X screen bash -c "time python3 src/mk_stats.py -c $cdir $indir $outdir $det $subdet; exec bash"
+
 det=s
 for subdet in {0..2}
 do
-  screen -S stats -X screen bash -c "time python3 src/mk_stats.py $indir $outdir $det $subdet; exec bash"
+  screen -S stats -X screen bash -c "time python3 src/mk_stats.py -c $cdir $indir $outdir $det $subdet; exec bash"
 done
+
 screen -rS stats

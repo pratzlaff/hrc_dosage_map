@@ -44,12 +44,26 @@ lyear=$year
 
 python3 ./src/expmaps_monthly.py $year $month "$basedir"/monthly
 
-/bin/bash ./00_READMEs/02_README_stats "$basedir"
-
 python3 ./src/expmaps_cumulative.py \
 	-y $year -m $month \
 	"$basedir"/monthly \
 	"$basedir"/cumulative
+
+det=i; subdet=0
+python3 ./src/mk_stats.py \
+	-c "$basedir"/cumulative \
+	"$basedir"/monthly \
+	"$basedir"/stats \
+	$det $subdet
+det=s
+for subdet in {0..2}
+do
+    python3 ./src/mk_stats.py \
+	    -c "$basedir"/cumulative \
+	    "$basedir"/monthly \
+	    "$basedir"/stats \
+	    $det $subdet
+done
 
 /bin/bash ./00_READMEs/04_README_png "$basedir"
 

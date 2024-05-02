@@ -376,8 +376,8 @@ def find_local_evt1(obsid):
     else:
         raise Exception(f'no local evt1 file found for obsid {obsid:05d}')
 
-def read_stat_file(sdir, det, i, type):
-    sfile = f'{sdir}/hrc{det}{i}{type}_stats'
+def read_stat_file(sdir, det, subdet, type):
+    sfile = f'{sdir}/hrc{det}{subdet}{type}_stats'
     names = ('year', 'month', 'mean', 'std',
              'min', 'minpos', 'max', 'maxpos',
              's1', 's2', 's3')
