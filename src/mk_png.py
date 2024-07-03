@@ -8,7 +8,7 @@ import sys
 
 import HRCExp
 
-def mk_png(indir, outdir, det, subdet, type, year, month, ds9, matplotlib, fitspng, clobber):
+def mk_png(indir, outdir, det, subdet, type, year, month, ds9, matplotlib, fitspng, clobber, noexec):
     HRCExp.mkdir_p(outdir)
 
     ifiles = glob.glob(f'{indir}/hrc{det}{subdet}{type}_{year}-{month}.fits.gz')
@@ -29,11 +29,21 @@ def mk_png(indir, outdir, det, subdet, type, year, month, ds9, matplotlib, fitsp
         det = re.search('hrc([is])[0-2][cm]', ofile).groups()[0]
 
         if (ds9):
-            HRCExp.fits2png_ds9(ifile, ofile, det)
+            if noexec:
+                sys.stderr.write("would run HRCExp.fits2png_ds9(ifile, ofile, det), but --noexec called\n")
+            else:
+                HRCExp.fits2png_ds9(ifile, ofile, det)
         if (matplotlib):
-            HRCExp.fits2png_matplotlib(ifile, ofile)
+            if noexec:
+                sys.stderr.write("would run HRCExp.fits2png_matplotlib(ifile, ofile), but --noexec called\n")
+            else:
+                HRCExp.fits2png_matplotlib(ifile, ofile)
         if (fitspng):
-            HRCExp.fits2png_fitspng(ifile, ofile)
+            if noexec:
+                sys.stderr.write("would run HRCExp.fits2png_fitspng(ifile, ofile), but --noexec called\n")
+            else:
+                HRCExp.fits2png_fitspng(ifile, ofile)
+        sys.stderr.flush()
 
 def main():
     parser = argparse.ArgumentParser(
@@ -46,13 +56,14 @@ def main():
     parser.add_argument('-t', '--type', default='[mc]', help='Detector.')
     parser.add_argument('-y', '--year', default='[0-9]'*4, help='Year.')
     parser.add_argument('-m', '--month', default='[0-9]'*2, help='Month.')
+    parser.add_argument('-n', '--noexec', action='store_true', help='Do not actually do anything.')
     parser.add_argument('--ds9', action='store_true')
     parser.add_argument('--matplotlib', action='store_true')
     parser.add_argument('--fitspng', action='store_true')
     parser.add_argument('--clobber', action='store_true', help='Overwrite even if outfile already exists and has mtime later than infile.')
 
     args = parser.parse_args()
-    mk_png(args.indir, args.outdir, args.det, args.subdet, args.type, args.year, args.month, args.ds9, args.matplotlib, args.fitspng, args.clobber)
+    mk_png(args.indir, args.outdir, args.det, args.subdet, args.type, args.year, args.month, args.ds9, args.matplotlib, args.fitspng, args.clobber, args.noexec)
 
 if __name__ == '__main__':
     main()
