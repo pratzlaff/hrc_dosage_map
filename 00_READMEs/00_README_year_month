@@ -71,6 +71,8 @@ python3 ./src/expmaps_cumulative.py \
 	"$basedir"/monthly \
 	"$basedir"/cumulative
 
-/bin/bash ./00_READMEs/04_README_png "$basedir"
+echo -n "Generate PNG files and copy to $basedir. Press ENTER to continue..."
+read
+#/bin/bash ./00_READMEs/04_README_png "$basedir"
 
 /bin/bash ./00_READMEs/05_README_html "$basedir"
