@@ -71,8 +71,16 @@ python3 ./src/expmaps_cumulative.py \
 	"$basedir"/monthly \
 	"$basedir"/cumulative
 
-echo -n "Generate PNG files and copy to $basedir. Press ENTER to continue..."
-read
-#/bin/bash ./00_READMEs/04_README_png "$basedir"
+str="Generate PNG files and copy to $basedir (e.g., run the following
+commands on remote machine)
+
+rsync -avnz --delete localhost:$(pwd)/$basedir/{monthly,cumulative} $basedir
+/bin/bash ./00_READMEs/04_README_png $basedir
+rsync -avnz --delete $basedir/png localhost:$(pwd)/$basedir
+
+Press ENTER to continue...
+"
+
+echo -n "$str"
 
 /bin/bash ./00_READMEs/05_README_html "$basedir"
