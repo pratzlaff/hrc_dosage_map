@@ -95,5 +95,6 @@ Press ENTER to continue...
 "
 
 echo -n "$str"
+read
 
 /bin/bash ./00_READMEs/05_README_html "$basedir"
