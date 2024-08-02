@@ -24,6 +24,7 @@ false && {
     exit 1
 }
 
+# if no arguments given, use the previous month
 if [ $# -eq 0 ]
 then
     read year month <<<$(date +'%Y %m')
@@ -38,31 +39,32 @@ else
     month="$2"
 fi
 
-echo Processing $year $month...
+echo Processing $year $month... 2>&1
 
+# Ensure requested year/month cumulative map doesn't already exist
 [ -f "$basedir"/cumulative/hrci0c_${year}-$(printf %02d $month).fits.gz ] && {
     echo "'$basedir/cumulative/hrci0c_${year}-$(printf %02d $month).fits.gz' already exists" 1>&2
     exit 1
 }
 
-lmonth=$month
-lyear=$year
-[ $lmonth -eq 1 ] && {
-    (( lyear-- ))
-    lmonth=12
-} || {
-    (( lmonth-- ))
-}
+# Ensure cumulative map prior to requested year/month does exist
+(( lmonth=month-1 ))
+(( lyear=year ))
+[ $lmonth -eq 0 ] && { lmonth=12; (( lyear-- )); }
 
 [ -f "$basedir"/cumulative/hrci0c_${lyear}-$(printf %02d $lmonth).fits.gz ] || {
     echo "'$basedir/cumulative/hrci0c_${lyear}-$(printf %02d $lmonth).fits.gz' doesn't exist" 1>&2
     exit 1
 }
 
+datestr=$(printf %4d-%02d $year $month)
+
 . ~/python3_venv/bin/activate
 
+echo "Generating monthly maps for $datestr" 2>&1
 python3 ./src/expmaps_monthly.py $year $month "$basedir"/monthly
 
+echo "Calculating statistics for HRC-I maps" 2>&1
 det=i; subdet=0
 python3 ./src/mk_stats.py \
 	-c "$basedir"/cumulative \
@@ -72,19 +74,22 @@ python3 ./src/mk_stats.py \
 det=s
 for subdet in {0..2}
 do
-     python3 ./src/mk_stats.py \
+    detstr=HRC-S$(expr $subdet + 1)
+    echo "Calculating statistics for $detstr maps" 2>&1
+    python3 ./src/mk_stats.py \
 	    -c "$basedir"/cumulative \
 	    "$basedir"/monthly \
 	    "$basedir"/stats \
 	    $det $subdet
 done
 
+echo "Generating cumulative maps for $datestr" 2>&1
 python3 ./src/expmaps_cumulative.py \
 	-y $year -m $month \
 	"$basedir"/monthly \
 	"$basedir"/cumulative
 
-str="Generate PNG files and copy to $basedir (e.g., run the following
+str="Next, generate PNG files and copy them to $basedir (e.g., run the following
 commands on remote machine)
 
 rsync -avnz --delete localhost:$(pwd)/$basedir/{monthly,cumulative} $basedir
@@ -94,7 +99,8 @@ rsync -avnz --delete $basedir/png localhost:$(pwd)/$basedir
 Press ENTER to continue...
 "
 
-echo -n "$str"
+echo -n "$str" 2>&1
 read
 
+echo "Generating HTML" 2>&1
 /bin/bash ./00_READMEs/05_README_html "$basedir"
