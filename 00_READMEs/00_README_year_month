@@ -19,13 +19,26 @@ false && {
     cp -a ./outdir/cumulative/*2024-03* ./test/cumulative
 }
 
-[ $# -eq 2 ] || {
-    echo "Usage: $0 year month" 1>&2
+[ $# -eq 2 -o $# -eq 0 ] || {
+    echo "Usage: $0 [year month]" 1>&2
     exit 1
 }
 
-year="$1"
-month="$2"
+if [ $# -eq 0 ]
+then
+    read year month <<<$(date +'%Y %m')
+    month=$(expr $month - 1) # side effect of removing leading zero
+    if [ $month -eq 0 ]
+    then
+	(( year-- ))
+	month=12
+    fi
+else
+    year="$1"
+    month="$2"
+fi
+
+echo Processing $year $month...
 
 [ -f "$basedir"/cumulative/hrci0c_${year}-$(printf %02d $month).fits.gz ] && {
     echo "'$basedir/cumulative/hrci0c_${year}-$(printf %02d $month).fits.gz' already exists" 1>&2
