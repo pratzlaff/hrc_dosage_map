@@ -28,7 +28,7 @@ false && {
 if [ $# -eq 0 ]
 then
     read year month <<<$(date +'%Y %m')
-    month=$(expr $month - 1) # side effect of removing leading zero
+    ((month--))
     if [ $month -eq 0 ]
     then
 	(( year-- ))
@@ -74,7 +74,7 @@ python3 ./src/mk_stats.py \
 det=s
 for subdet in {0..2}
 do
-    detstr=HRC-S$(expr $subdet + 1)
+    detstr=HRC-S$((subdet+1))
     echo "Calculating statistics for $detstr maps" 2>&1
     python3 ./src/mk_stats.py \
 	    -c "$basedir"/cumulative \
