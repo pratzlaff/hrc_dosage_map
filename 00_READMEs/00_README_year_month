@@ -48,8 +48,8 @@ echo Processing $year $month... 2>&1
 }
 
 # Ensure cumulative map prior to requested year/month does exist
-(( lmonth=month-1 ))
-(( lyear=year ))
+lmonth=$(( month-1 ))
+lyear=$year
 [ $lmonth -eq 0 ] && { lmonth=12; (( lyear-- )); }
 
 [ -f "$basedir"/cumulative/hrci0c_${lyear}-$(printf %02d $lmonth).fits.gz ] || {
