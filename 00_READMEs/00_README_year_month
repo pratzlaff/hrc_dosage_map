@@ -92,9 +92,9 @@ python3 ./src/expmaps_cumulative.py \
 str="Next, generate PNG files and copy them to $basedir (e.g., run the following
 commands on remote machine)
 
-rsync -avnz --delete localhost:$(pwd)/$basedir/{monthly,cumulative} $basedir
+rsync -avn --delete localhost:$(pwd)/$basedir/{monthly,cumulative} $basedir
 /bin/bash ./00_READMEs/04_README_png $basedir
-rsync -avnz --delete $basedir/png localhost:$(pwd)/$basedir
+rsync -avn --delete $basedir/png localhost:$(pwd)/$basedir
 
 Press ENTER to continue...
 "
