@@ -39,7 +39,7 @@ else
     month="$2"
 fi
 
-echo Processing $year $month... 2>&1
+echo Processing $year $month... 1>&2
 
 # Ensure requested year/month cumulative map doesn't already exist
 [ -f "$basedir"/cumulative/hrci0c_${year}-$(printf %02d $month).fits.gz ] && {
@@ -61,10 +61,10 @@ datestr=$(printf %4d-%02d $year $month)
 
 . ~/python3_venv/bin/activate
 
-echo "Generating monthly maps for $datestr" 2>&1
+echo "Generating monthly maps for $datestr" 1>&2
 python3 ./src/expmaps_monthly.py $year $month "$basedir"/monthly
 
-echo "Calculating statistics for HRC-I maps" 2>&1
+echo "Calculating statistics for HRC-I maps" 1>&2
 det=i; subdet=0
 python3 ./src/mk_stats.py \
 	-c "$basedir"/cumulative \
@@ -75,7 +75,7 @@ det=s
 for subdet in {0..2}
 do
     detstr=HRC-S$((subdet+1))
-    echo "Calculating statistics for $detstr maps" 2>&1
+    echo "Calculating statistics for $detstr maps" 1>&2
     python3 ./src/mk_stats.py \
 	    -c "$basedir"/cumulative \
 	    "$basedir"/monthly \
@@ -83,24 +83,20 @@ do
 	    $det $subdet
 done
 
-echo "Generating cumulative maps for $datestr" 2>&1
+echo "Generating cumulative maps for $datestr" 1>&2
 python3 ./src/expmaps_cumulative.py \
 	-y $year -m $month \
 	"$basedir"/monthly \
 	"$basedir"/cumulative
 
-str="Next, generate PNG files and copy them to $basedir (e.g., run the following
-commands on remote machine)
+echo "
+Next, generate PNG files and copy them to $basedir (e.g., run the
+following commands on remote machine)
 
 rsync -avn --delete localhost:$(pwd)/$basedir/{monthly,cumulative} $basedir
 /bin/bash ./00_READMEs/04_README_png $basedir
 rsync -avn --delete $basedir/png localhost:$(pwd)/$basedir
+" 1>&2
 
-Press ENTER to continue...
-"
-
-echo -n "$str" 2>&1
-read
-
-echo "Generating HTML" 2>&1
+echo "Generating HTML" 1>&2
 /bin/bash ./00_READMEs/05_README_html "$basedir"

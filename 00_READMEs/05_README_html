@@ -30,8 +30,12 @@ ln -s ../../$pngdir $outdir/Image
 python3 ./src/mk_plots.py $sdir $pdir
 python3 ./src/mk_html.py $sdir $pngdir $outdir
 
-echo "rsync -avzn --delete $outdir/ /data/wdocs/rpete/HRC_Exposure --exclude Image"
-echo "rsync -avn --delete $pngdir/ /data/wdocs/rpete/HRC_Exposure/Image"
+echo "
+Finally, copy the HTML files to /data/wdocs
+
+  rsync -avzn --delete $outdir/ /data/wdocs/rpete/HRC_Exposure --exclude Image
+  rsync -avn --delete $pngdir/ /data/wdocs/rpete/HRC_Exposure/Image
+" 1>&2
 
 #echo "rsync -e 'ssh -p 1235' -avzn --delete $outdir/ localhost:/data/wdocs/rpete/HRC_Exposure --exclude Image | less"
 #echo "rsync -e 'ssh -p 1235' -avn --delete $pngdir/ localhost:/data/wdocs/rpete/HRC_Exposure/Image | less"
