@@ -26,22 +26,22 @@ def detnam(evt1):
 def nsubdets(det):
     return len(subraw[det]['x'][0])
 
-def mk_zero_expmaps(det=None, subdet=None):
+def mk_zero_dosemaps(det=None, subdet=None):
     dets = subraw.keys()
     if det:
         dets = [ det ]
-    expmaps = { }
+    dosemaps = { }
 
     for det in dets:
-        expmaps[det] = { }
+        dosemaps[det] = { }
         subdets = list(range(len(subraw[det]['x'][0])))
         if subdet is not None:
             subdets = [ subdet ]
         for i in subdets:
             nx = subraw[det]['x'][1][i] - subraw[det]['x'][0][i] + 1
             ny = subraw[det]['y'][1][i] - subraw[det]['y'][0][i] + 1
-            expmaps[det][i] = np.zeros((ny, nx), dtype=np.int16)
-    return expmaps
+            dosemaps[det][i] = np.zeros((ny, nx), dtype=np.int16)
+    return dosemaps
 
 def mkdir_p(path):
     try:
@@ -275,7 +275,7 @@ def change_month_format(month):
 
 def read_ocat():
     ocat='/data/mta4/obs_ss/sot_ocat.out'
-    ocat='/data/legs/rpete/flight/hrc_exposure_map/obsolete/Scripts/house_keeping/sot_ocat.out'
+    ocat='/data/legs/rpete/flight/hrc_dose_map/obsolete/Scripts/house_keeping/sot_ocat.out'
     mdict = {
         'Jan':1,
         'Feb':2,
@@ -363,7 +363,7 @@ go
 
 def send_email(address, message):
     p = subprocess.Popen(
-        ['mailx', '-sSubject: HRC Exposure Map Processed', address],
+        ['mailx', '-sSubject: HRC Dosage Map Processed', address],
         stdin=subprocess.PIPE,
         stdout=subprocess.PIPE,
     )

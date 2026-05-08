@@ -26,17 +26,17 @@
 
 <body>
 <h2>
-HRC Exposure Map
+HRC Dosage Map
 </h2>
 
 <p style='margin-left:30px; margn-right:30px;'>
-The tables below show the links to HRC-I and HRC-S exposure history and images.
+The tables below show the links to HRC-I and HRC-S dosage history and images.
 </p>
 
 <p style='margin-left:30px; margn-right:30px;'>
-The plot links show plots of exposure history. The left side shows the
-monthly exposure, and the right side shows the cumulative
-exposures. The top panels show the average count rate in cnt/pixel,
+The plot links show plots of dosage history. The left side shows the
+monthly dosage , and the right side shows the cumulative
+dosage. The top panels show the average count rate in cnt/pixel,
 the middle panels show the maximum count rate and the bottom panels
 show the count rate of the pixels at 68%, 95%, and 99.7% percentiles.
 The definitions are the same on both monthly and cumulative data.
@@ -46,8 +46,8 @@ represent the maximum trend more accurately.
 
 <p style='margin-left:30px; margn-right:30px;'>
 The data table displays statistics in a table format and also links to
-the exposure images. By clicking the link "map," you can check the
-exposure map of that month.
+the dosage images. By clicking the link "map," you can check the
+dosage map of that month.
 </p>
 
 <br /><br />

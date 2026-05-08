@@ -38,18 +38,18 @@ Telemetered Photon Dose Trends
 <h2>ACIS</h2>
 
 <p>
-To monitor accumulative exposure effects on ACIS, we created
-cumulative exposure map once a month from all observations, including cariblations,
-using evt1 data of that month. This map is added on  all previous exposure
-maps, and then statistics of the total exposure map is computed.
+To monitor accumulative dosage effects on ACIS, we create
+cumulative dosage map once a month from all observations, including calibrations,
+using evt1 data of that month. This map is added on  all previous dosage
+maps, and then statistics of the total dosage map is computed.
 </p>
 
 <p>
 The table below lists links to trend plots of average, minimum, maximum, and 68%, 95%, and 99.7% 
-level of dose for ACIS I and ACIS S.  The plots on the left are the trends of exposure doses of each month,
-and the plots on rights are trends of cumulative exposure doses from the begining
-of the Chandra mission (each month exposure map is added on to the
-previous all exposure maps).
+level of dose for ACIS I and ACIS S.  The plots on the left are the trends of doses of each month,
+and the plots on rights are trends of cumulative doses from the begining
+of the Chandra mission (each month dosage map is added on to the
+previous all dosage maps).
 </p>
 
 <p>
@@ -143,23 +143,23 @@ image of the data.
 
 <h2>HRC</h2>
 <p>
-To monitor accumulative exposure effects on HRC, we created
-cumulative exposure maps of HRC using evt1 data of each month. 
+To monitor accumulative dosage effects on HRC, we created
+cumulative dosage maps of HRC using evt1 data of each month. 
 </p>
 <p>
 Following steps are taken to get the results
 </p>
 <ul>
 <li> Level 1 Event files for a specified month are obtained from archive.</li>
-<li> All the extracted image data were merged to create a month long exposure map for the month.</li>
+<li> All the extracted image data were merged to create a month-long dosage map for the month.</li>
 </ul>
 
-<h2>HRC Exposure Maps --- Centeral Part ---</h2>
+<h2>HRC Dosage Maps --- Central Part ---</h2>
 
 <p>
 Following plots show trend of average, maximum, and 68%, 95%, and 99.7% level doses for HRC I and HRC S.
 The plots on the left are  thoese of each month, and the plots on the right are 
-cumulative exposure counts from the begining of the Chandra mission.
+cumulative counts from the begining of the Chandra mission.
 </p>
 <p>
 The minimum trends are not included since the map has the grid area where has no counts at all, and
@@ -180,9 +180,6 @@ it makes the minmum counts, even it is cumulative, always zero.
 </a>
 </div>
 
-
-
-
 <h3>HRC S</h3>
 <a href="javascript:MyWindowOpener('./Plots/hrcs.png')">
 <img src = './Plots/hrcs.png' style='width:48%;float:left'>
@@ -197,8 +194,7 @@ it makes the minmum counts, even it is cumulative, always zero.
 </a>
 </div>
 
-
-<h2> HRC Exposre Maps --- Sectioned Entire HRC --- </h2>
+<h2> HRC Dosage Maps --- Sectioned Entire HRC --- </h2>
 
 <br /><br />
 <div>
@@ -211,9 +207,6 @@ it makes the minmum counts, even it is cumulative, always zero.
 <img src="./Plots/Structures/hrcs_structure.gif" style='width:65%'>
 </center>
 </div>
-
-
-
 
 <br><br>
 <h2>HRC I</h2>
@@ -231,7 +224,6 @@ it makes the minmum counts, even it is cumulative, always zero.
 <td> <a href="javascript:MyWindowOpener('./Images/hrci0_#LATEST#.png')"> Section 0 </a> </td>
 </tr>
 </table>
-
 
 <br><br>
 

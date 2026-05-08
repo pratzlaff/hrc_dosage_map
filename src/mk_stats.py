@@ -6,22 +6,22 @@ import os
 import re
 import sys
 
-import HRCExp
+import HRCDose
 
-def expmap_year_month(fname):
+def dosemap_year_month(fname):
     year, month = re.search(r'(\d{4})-(\d{2})', fname).groups()[0:2]
     return int(year), int(month)
 
 def mk_stats(indir, outdir, det, subdet, cdir):
-    HRCExp.mkdir_p(outdir)
+    HRCDose.mkdir_p(outdir)
     files = glob.glob(f'{indir}/hrc{det}{subdet}m_[0-9][0-9][0-9][0-9]-[0-9][0-9].fits.gz')
     files.sort()
     if not files:
         sys.stderr.write(f'no files found in {indir} for detector {det}:{subdet}\n')
         sys.exit(0)
 
-    y0, m0 = expmap_year_month(files[0])
-    y1, m1 = expmap_year_month(files[-1])
+    y0, m0 = dosemap_year_month(files[0])
+    y1, m1 = dosemap_year_month(files[-1])
 
     if y1==y0:
         nmonths = m1-m0+1
@@ -29,22 +29,22 @@ def mk_stats(indir, outdir, det, subdet, cdir):
         nmonths = 13-m0+m1+ 12*(y1-y0-1)
 
     if (nmonths != len(files)):
-        sys.stderr.write(f'Expecting {nmonths} expmap files, only see {len(files)}.\n')
+        sys.stderr.write(f'Expecting {nmonths} dosage files, only see {len(files)}.\n')
         sys.exit(1)
 
     fcfile = f'{outdir}/hrc{det}{subdet}c_stats'
     fmfile = f'{outdir}/hrc{det}{subdet}m_stats'
     nostats = [*['0']*3, '(1,1)', '0', '(1,1)', *['0']*3]
 
-    expmaps = HRCExp.mk_zero_expmaps(det, subdet)
+    dosemaps = HRCDose.mk_zero_dosemaps(det, subdet)
 
     # append mode
     if (os.path.isfile(fcfile) and os.path.isfile(fmfile)):
         if cdir is None:
             sys.stderr.write(f'Going into append mode, but --cdir unspecified.\n')
             sys.exit(1)
-        cstats = HRCExp.read_stat_file(outdir, det, subdet, 'c')
-        mstats = HRCExp.read_stat_file(outdir, det, subdet, 'm')
+        cstats = HRCDose.read_stat_file(outdir, det, subdet, 'c')
+        mstats = HRCDose.read_stat_file(outdir, det, subdet, 'm')
 
         # previous year and month
         py = cstats[0][-1]
@@ -73,7 +73,7 @@ def mk_stats(indir, outdir, det, subdet, cdir):
         fm = open(fmfile, 'a')
         fc = open(fcfile, 'a')
         fname = f'{cdir}/hrc{det}{subdet}c_{py}-{pm:02}.fits.gz'
-        expmaps[det][subdet] += astropy.io.fits.open(fname)[0].data
+        dosemaps[det][subdet] += astropy.io.fits.open(fname)[0].data
 
     else:
         fm = open(fmfile, 'w')
@@ -83,7 +83,7 @@ def mk_stats(indir, outdir, det, subdet, cdir):
     year, month = y0, m0
     for i in range(nmonths):
         sys.stderr.write(f'{files[i]}\n')
-        year, month = expmap_year_month(files[i])
+        year, month = dosemap_year_month(files[i])
         img = astropy.io.fits.open(files[i])[0].data
         # if there were no observations during a month, will throw a
         # ValuError when calling numpy.histogram with nbins=0
@@ -101,7 +101,7 @@ def mk_stats(indir, outdir, det, subdet, cdir):
             fc.flush()
             continue
 
-        out = HRCExp.stats_img(img, det, subdet)
+        out = HRCDose.stats_img(img, det, subdet)
 
         fm.write('\t'.join([
             f'{year}',
@@ -117,9 +117,9 @@ def mk_stats(indir, outdir, det, subdet, cdir):
             f'{s3:.0f}',
             '\n']))
 
-        expmaps[det][subdet] += img
-        out = HRCExp.stats_img(expmaps[det][subdet], det, subdet)
-        s1, s2, s3 = sigma_values(expmaps[det][subdet])
+        dosemaps[det][subdet] += img
+        out = HRCDose.stats_img(dosemaps[det][subdet], det, subdet)
+        s1, s2, s3 = sigma_values(dosemaps[det][subdet])
         lcstats = [
             f'{year}',
             f'{month}',
@@ -172,9 +172,9 @@ def sigma_values(img):
 
 def main():
     parser = argparse.ArgumentParser(
-        description='Combine monthly exposure maps.'
+        description='Combine monthly dosage maps.'
     )
-    parser.add_argument('-c', '--cdir', help='Cumulative exposure map directory, required for append mode.')
+    parser.add_argument('-c', '--cdir', help='Cumulative dosage map directory, required for append mode.')
     parser.add_argument('indir', help='Input directory.')
     parser.add_argument('outdir', help='Output directory.')
     parser.add_argument('det', choices=['i', 's'], help='Detector.')

@@ -1,0 +1,26 @@
+#! /bin/bash
+
+true && {
+  echo 'This script recreates every monthly dosage map.' 1>&2
+  exit
+}
+
+set -eo pipefail
+
+outdir=./outdir/monthly
+
+. ~/python3_venv/bin/activate
+
+screen -dmS medosemaps bash -c 'exec bash'
+y=1999
+script="time for m in {8..12}; do echo $y-\\\$m; python3 src/dosemaps_monthly.py $y \\\$m $outdir; done"
+screen -S mdosemaps -X screen bash -c "$script; exec bash"
+for y in {2000..2023}
+do
+  script="time for m in {1..12}; do echo $y-\\\$m; python3 src/dosemaps_monthly.py $y \\\$m $outdir; done"
+  screen -S mdosemaps -X screen bash -c "$script; exec bash"
+done
+y=2024
+script="time for m in {1..3}; do echo $y-\\\$m; python3 src/dosemaps_monthly.py $y \\\$m $outdir; done"
+screen -S mdosemaps -X screen bash -c "$script; exec bash"
+screen -rS mdosemaps

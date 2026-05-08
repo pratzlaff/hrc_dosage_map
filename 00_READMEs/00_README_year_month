@@ -1,13 +1,12 @@
 #! /bin/bash
 
-set -e
-set -o pipefail
+set -eo pipefail
 
 #
-# Generates exposure map for the specified year/month.
+# Generates dosage map for the specified year/month.
 #
-# Assumes the previous month's exposure map already exists and creates
-# the new cumulative exposure map, updates the PNG and HTML
+# Assumes the previous month's dosage map already exists and creates
+# the new cumulative dosage map, updates the PNG and HTML
 # directories.
 #
 
@@ -64,7 +63,7 @@ datestr=$(printf %4d-%02d $year $month)
 . ~/python3_venv/bin/activate
 
 echo "Generating monthly maps for $datestr" 1>&2
-python3 ./src/expmaps_monthly.py $year $month "$basedir"/monthly
+python3 ./src/dosemaps_monthly.py $year $month "$basedir"/monthly
 
 echo "Calculating statistics for HRC-I maps" 1>&2
 det=i; subdet=0
@@ -86,7 +85,7 @@ do
 done
 
 echo "Generating cumulative maps for $datestr" 1>&2
-python3 ./src/expmaps_cumulative.py \
+python3 ./src/dosemaps_cumulative.py \
 	-y $year -m $month \
 	"$basedir"/monthly \
 	"$basedir"/cumulative

@@ -6,10 +6,10 @@ import os
 import re
 import sys
 
-import HRCExp
+import HRCDose
 
 def mk_png(indir, outdir, det, subdet, type, year, month, ds9, matplotlib, fitspng, clobber, noexec):
-    HRCExp.mkdir_p(outdir)
+    HRCDose.mkdir_p(outdir)
 
     ifiles = glob.glob(f'{indir}/hrc{det}{subdet}{type}_{year}-{month}.fits.gz')
     ifiles.sort()
@@ -30,24 +30,24 @@ def mk_png(indir, outdir, det, subdet, type, year, month, ds9, matplotlib, fitsp
 
         if (ds9):
             if noexec:
-                sys.stderr.write("would run HRCExp.fits2png_ds9(ifile, ofile, det), but --noexec called\n")
+                sys.stderr.write("would run HRCDose.fits2png_ds9(ifile, ofile, det), but --noexec called\n")
             else:
-                HRCExp.fits2png_ds9(ifile, ofile, det)
+                HRCDose.fits2png_ds9(ifile, ofile, det)
         if (matplotlib):
             if noexec:
-                sys.stderr.write("would run HRCExp.fits2png_matplotlib(ifile, ofile), but --noexec called\n")
+                sys.stderr.write("would run HRCDose.fits2png_matplotlib(ifile, ofile), but --noexec called\n")
             else:
-                HRCExp.fits2png_matplotlib(ifile, ofile)
+                HRCDose.fits2png_matplotlib(ifile, ofile)
         if (fitspng):
             if noexec:
-                sys.stderr.write("would run HRCExp.fits2png_fitspng(ifile, ofile), but --noexec called\n")
+                sys.stderr.write("would run HRCDose.fits2png_fitspng(ifile, ofile), but --noexec called\n")
             else:
-                HRCExp.fits2png_fitspng(ifile, ofile)
+                HRCDose.fits2png_fitspng(ifile, ofile)
         sys.stderr.flush()
 
 def main():
     parser = argparse.ArgumentParser(
-        description='Create PNG images from HRC exposure maps.'
+        description='Create PNG images from HRC dosage maps.'
     )
     parser.add_argument('indir', help='Input directory.')
     parser.add_argument('outdir', help='Output directory.')

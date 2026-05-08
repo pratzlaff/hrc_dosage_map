@@ -9,24 +9,24 @@ import matplotlib.pyplot as plt
 import matplotlib.font_manager as font_manager
 import matplotlib.lines as lines
 
-import HRCExp
+import HRCDose
 
 plt.rcParams['axes.titley'] = 1.0    # y is in axes-relative coordinates.
 plt.rcParams['axes.titlepad'] = -14  # pad is in points...
 
-import HRCExp
+import HRCDose
 
 def mk_plots(sdir, outdir):
 
-    HRCExp.mkdir_p(outdir)
+    HRCDose.mkdir_p(outdir)
 
-    for det in HRCExp.dets():
-        for i in range(HRCExp.nsubdets(det)):
+    for det in HRCDose.dets():
+        for i in range(HRCDose.nsubdets(det)):
 
             ofile = f'{outdir}/hrc{det}{i}.png'
 
-            cdata =  HRCExp.read_stat_file(sdir, det, i, 'c')
-            mdata =  HRCExp.read_stat_file(sdir, det, i, 'm')
+            cdata =  HRCDose.read_stat_file(sdir, det, i, 'c')
+            mdata =  HRCDose.read_stat_file(sdir, det, i, 'm')
 
             plot_hrc_dose(cdata, mdata, ofile)
 
@@ -90,7 +90,7 @@ def plot_hrc_dose(cdata, mdata, ofile):
 
 def main():
     parser = argparse.ArgumentParser(
-        description='Create plots of exposure statistics.'
+        description='Create plots of dosage statistics.'
     )
     parser.add_argument('sdir', help='Statistics directory.')
     parser.add_argument('outdir', help='Output directory.')

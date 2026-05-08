@@ -1,6 +1,6 @@
 import argparse
 
-import HRCExp
+import HRCDose
 
 def obsids(i=True, s=True)
     pass

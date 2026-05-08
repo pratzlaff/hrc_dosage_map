@@ -5,8 +5,7 @@ false && {
   exit
 }
 
-set -e
-set -o pipefail
+set -eo pipefail
 
 [ $# -lt 2 ] || {
     echo "Usage: $0 [basedir]" 1>&2

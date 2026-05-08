@@ -1,0 +1,22 @@
+#! /bin/bash
+
+set -eo pipefail
+
+indir=./outdir/monthly
+outdir=./outdir/cumulative
+
+. ~/python3_venv/bin/activate
+
+screen -dmS cdosemaps bash -c 'exec bash'
+
+det=i
+subdet=0
+screen -S cdosemaps -X screen bash -c "time python3 src/dosemaps_cumulative.py $indir $outdir -d $det -s $subdet; exec bash"
+
+det=s
+for subdet in {0..2}
+do
+  screen -S cdosemaps -X screen bash -c "time python3 src/dosemaps_cumulative.py $indir $outdir -d $det -s $subdet; exec bash"
+done
+
+screen -rS cdosemaps

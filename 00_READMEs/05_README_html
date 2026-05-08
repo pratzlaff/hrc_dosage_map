@@ -5,8 +5,7 @@ false && {
   exit
 }
 
-set -e
-set -o pipefail
+set -eo pipefail
 
 [ $# -lt 2 ] || {
     echo "Usage: $0 [basedir]" 1>&2
@@ -33,9 +32,9 @@ python3 ./src/mk_html.py $sdir $pngdir $outdir
 echo "
 Finally, copy the HTML files to /data/wdocs
 
-  rsync -avzn --delete $outdir/ /data/wdocs/rpete/HRC_Exposure --exclude Image
-  rsync -avn --delete $pngdir/ /data/wdocs/rpete/HRC_Exposure/Image
+  rsync -avzn --delete $outdir/ /data/wdocs/rpete/HRC_Dosage --exclude Image
+  rsync -avn --delete $pngdir/ /data/wdocs/rpete/HRC_Dosage/Image
 " 1>&2
 
-#echo "rsync -e 'ssh -p 1235' -avzn --delete $outdir/ localhost:/data/wdocs/rpete/HRC_Exposure --exclude Image | less"
-#echo "rsync -e 'ssh -p 1235' -avn --delete $pngdir/ localhost:/data/wdocs/rpete/HRC_Exposure/Image | less"
+#echo "rsync -e 'ssh -p 1235' -avzn --delete $outdir/ localhost:/data/wdocs/rpete/HRC_Dosage --exclude Image | less"
+#echo "rsync -e 'ssh -p 1235' -avn --delete $pngdir/ localhost:/data/wdocs/rpete/HRC_Dosage/Image | less"

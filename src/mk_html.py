@@ -7,7 +7,7 @@ import re
 import sys
 import time
 
-import HRCExp
+import HRCDose
 
 chips = { 'i':['I'], 's':['S1', 'S2', 'S3'] }
 
@@ -22,10 +22,10 @@ def read_year_month(sfile):
 
 def mk_html(sdir, pdir, tdir, outdir):
 
-    HRCExp.mkdir_p(f'{outdir}/Sub_html')
+    HRCDose.mkdir_p(f'{outdir}/Sub_html')
 
-    for det in HRCExp.subraw:
-        for i in range(HRCExp.nsubdets(det)):
+    for det in HRCDose.subraw:
+        for i in range(HRCDose.nsubdets(det)):
             create_html_page(sdir, det, i, tdir, outdir)
 
     create_main_html(sdir, tdir, outdir)
@@ -50,8 +50,8 @@ def create_html_page(sdir, det, i, tdir, outdir):
     global chips
     tdir = f'{tdir}/Templates'
 
-    cdata = HRCExp.read_stat_file(sdir, det, i, 'c')
-    mdata = HRCExp.read_stat_file(sdir, det, i, 'm')
+    cdata = HRCDose.read_stat_file(sdir, det, i, 'c')
+    mdata = HRCDose.read_stat_file(sdir, det, i, 'm')
 
     aline  = read_template(tdir, 'sub_top1')
 
@@ -61,15 +61,15 @@ def create_html_page(sdir, det, i, tdir, outdir):
     aline += f'''<title>HRC-{chips[det][i]}: Historical Data</title>
 </head>
 <body style="color:white;background-color:black">
-<div><a href="../hrc_exposure_map.html">Back to Top</a>
+<div><a href="../hrc_dosage_map.html">Back to Top</a>
 <h2 style="text-align:center">Data: HRC-{chips[det][i]}
 '''
 
     links = []
-    dets = HRCExp.dets()
+    dets = HRCDose.dets()
     dets.sort()
     for d in dets:
-        for subdet in range(HRCExp.nsubdets(d)):
+        for subdet in range(HRCDose.nsubdets(d)):
             if (d != det or subdet != i):
                 links.append(f'<a href="./hrc{d}{subdet}.html">{chips[d][subdet]}</a>')
     aline += '(' + ', '.join(links)+')'
@@ -94,7 +94,7 @@ def create_html_page(sdir, det, i, tdir, outdir):
 
 #--- converting digit to letters, i.e. 1 to Jan
 #
-        cmonth = HRCExp.change_month_format(months[j])
+        cmonth = HRCDose.change_month_format(months[j])
 #
 #--- monthly HRC dose data
 #
@@ -134,14 +134,14 @@ def create_html_page(sdir, det, i, tdir, outdir):
     aline += '''\
 </table>
 
-<div style="padding_top:10px; padding_bottom:10px;"><a href="../hrc_exposure_map.html">Back to Top</a>
+<div style="padding_top:10px; padding_bottom:10px;"><a href="../hrc_dosage_map.html">Back to Top</a>
 '''
 
 #
 #--- add today's date as update date
 #
     year, month, day = time.gmtime()[0:3]
-    month = HRCExp.change_month_format(month)
+    month = HRCDose.change_month_format(month)
     today = f'{month} {day}, {year}'
 
     aline += read_template(tdir, 'sub_footer').replace('#UPDATE#', today)
@@ -160,7 +160,7 @@ def create_main_html(sdir, tdir, outdir):
 #--- display date
 #
     year, month, day = time.gmtime()[0:3]
-    month = HRCExp.change_month_format(month)
+    month = HRCDose.change_month_format(month)
     today = f'{month} {day}, {year}'
 #
 #--- link date for the most recent plots
@@ -171,7 +171,7 @@ def create_main_html(sdir, tdir, outdir):
     data  = data.replace('#LATEST#', f'{lyear}-{lmon:02d}')
     data  = data.replace('#UPDATE#', today)
 
-    ofile = f'{outdir}/hrc_exposure_map.html'
+    ofile = f'{outdir}/hrc_dosage_map.html'
     with open(ofile, 'w') as fo:
         fo.write(data)
 
@@ -184,12 +184,12 @@ def read_template(tdir, template):
         return f.read()
 
 #------------------------------------------------------------------------------------
-#-- create_img_html: create htmls to display exposure map                          --
+#-- create_img_html: create htmls to display dosage map                          --
 #------------------------------------------------------------------------------------
 
 def create_img_html(pdir, tdir, outdir, year=None, month=None, next_month=True):
     """
-    create htmls to display exposure map.
+    create htmls to display dosage map.
     input:  year    --- year, if it is not given, the last month is used
             month   --- month, if it is not given, the last month is used
     output: <web_dir>/Image/HRC<inst>/Month/HRC<inst>_<mm>_<yyyy>_<sec>.html
@@ -236,10 +236,10 @@ def create_img_html(pdir, tdir, outdir, year=None, month=None, next_month=True):
 
     monthly = read_template(tdir, 'mon_img_page')
 
-    dets = HRCExp.dets()
+    dets = HRCDose.dets()
     dets.sort()
     for inst in dets:
-        cstop = HRCExp.nsubdets(inst)
+        cstop = HRCDose.nsubdets(inst)
 
         for sec in range(cstop):
 #
@@ -250,10 +250,10 @@ def create_img_html(pdir, tdir, outdir, year=None, month=None, next_month=True):
 #--- chip links
 #
             links = []
-            dets = HRCExp.dets()
+            dets = HRCDose.dets()
             dets.sort()
             for d in dets:
-                for subdet in range(HRCExp.nsubdets(d)):
+                for subdet in range(HRCDose.nsubdets(d)):
                     if (d != inst or subdet != sec):
                         links.append(f'<a href="./hrc{d}{subdet}m_{ldate}.html">{chips[d][subdet]}</a>')
             seclink = ' '.join(links)+'<br />'
@@ -299,17 +299,17 @@ def create_img_html(pdir, tdir, outdir, year=None, month=None, next_month=True):
 #--- cumulative page
 #
     cumulative  = read_template(tdir, 'cum_img_page')
-    for inst in HRCExp.dets():
-        nsec = HRCExp.nsubdets(inst)
+    for inst in HRCDose.dets():
+        nsec = HRCDose.nsubdets(inst)
         for sec in range(nsec):
 #
 #--- chip links
 #
             links = []
-            dets = HRCExp.dets()
+            dets = HRCDose.dets()
             dets.sort()
             for d in dets:
-                for subdet in range(HRCExp.nsubdets(d)):
+                for subdet in range(HRCDose.nsubdets(d)):
                     if (d != inst or subdet != sec):
                         links.append(f'<a href="./hrc{d}{subdet}c_{ldate}.html">{chips[d][subdet]}</a>')
             seclink = ' '.join(links)+'<br />'
@@ -356,7 +356,7 @@ def create_img_html(pdir, tdir, outdir, year=None, month=None, next_month=True):
 
 def main():
     parser = argparse.ArgumentParser(
-        description='Create HTML pages from HRC exposure maps.'
+        description='Create HTML pages from HRC dosage maps.'
     )
     parser.add_argument('--template_dir', default='./html', help='Directory containing HTML templates.')
     parser.add_argument('sdir', help='Stats directory.')
