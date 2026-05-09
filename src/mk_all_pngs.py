@@ -25,6 +25,10 @@ def mk_png(args):
             if not args.clobber:
                 sys.stderr.write(f'{ofile} exists and has mtime greater than {ifile}, skipping. Use --clobber to override\n')
                 continue
+        if args.filenames:
+            print(f'{ifile} {ofile}')
+            continue
+
         print(f'{ifile} ->  {ofile}')
 
         regex = 'hrc([is])[0-2][cm]'
@@ -62,6 +66,7 @@ def main():
     )
     parser.add_argument('indir', help='Input directory.')
     parser.add_argument('outdir', help='Output directory.')
+    parser.add_argument('--filenames', action='store_true', help='Only print input and output filenames.')
     parser.add_argument('-d', '--det', default='[is]', help='Detector.')
     parser.add_argument('-s', '--subdet', default='[0-2]', help='Detector.')
     parser.add_argument('-t', '--type', default='[mc]', help='Detector.')

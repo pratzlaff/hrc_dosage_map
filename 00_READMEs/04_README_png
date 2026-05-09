@@ -29,9 +29,19 @@ shopt -s expand_aliases
 . ~/python3_venv/bin/activate
 
 Xvfb :101 -screen 0 2560x1440x24 1>/dev/null 2>&1 &
+
 for type in m c
 do
     indir=${indirs[$type]}
-    time DISPLAY=:101 python3 src/mk_png.py $indir $outdir
+    time DISPLAY=:101 python3 src/mk_all_pngs.py $indir $outdir
+
+    # I've been unable to successfully run multiple simultaneously ds9
+    # processes, even using -title, but this is one way it might have
+    # been done
+
+    # python3 src/mk_all_pngs.py $indir $outdir --filename 2>/dev/null |\
+    # 	time env DISPLAY=:101 parallel -j 16 --colsep ' ' python3 ./src/mk_one_png.py {1} {2} {%}
+
 done
+
 killall Xvfb
