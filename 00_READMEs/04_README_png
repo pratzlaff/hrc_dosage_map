@@ -25,14 +25,13 @@ outdir="$basedir"/png
 
 . ~/.bash_aliases
 shopt -s expand_aliases
-ciao
 
 . ~/python3_venv/bin/activate
 
-#Xvfb :101 -screen 0 1024x1024x24 2>/dev/null 1>&1 &
+Xvfb :101 -screen 0 2560x1440x24 1>/dev/null 2>&1 &
 for type in m c
 do
     indir=${indirs[$type]}
-    #time DISPLAY=:101 python3 src/mk_png.py $indir $outdir -d i -s 0 -t m --ds9
-    time python3 src/mk_png.py $indir $outdir --ds9
+    time DISPLAY=:101 python3 src/mk_png.py $indir $outdir
 done
+killall Xvfb
