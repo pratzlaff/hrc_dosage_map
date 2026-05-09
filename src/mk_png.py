@@ -8,10 +8,11 @@ import sys
 
 import HRCDose
 
-def mk_png(indir, outdir, det, subdet, type, year, month, ds9, matplotlib, fitspng, clobber, noexec):
+def mk_png(args):
+    indir, outdir, subdet, type, year, month = (args.indir, args.outdir, args.subdet, args.type, args.year, args.month)
     HRCDose.mkdir_p(outdir)
 
-    ifiles = glob.glob(f'{indir}/hrc{det}{subdet}{type}_{year}-{month}.fits.gz')
+    ifiles = glob.glob(f'{indir}/hrc{args.det}{subdet}{type}_{year}-{month}.fits.gz')
     ifiles.sort()
 
     ofiles = [ f'{outdir}/'+re.search(r'([^/]+)\.fits.*$', f).groups()[0]+'.png' for f in ifiles]
@@ -21,28 +22,38 @@ def mk_png(indir, outdir, det, subdet, type, year, month, ds9, matplotlib, fitsp
         ofile = ofiles[i]
 
         if os.path.isfile(ofile) and os.path.getmtime(ifile) < os.path.getmtime(ofile):
-            if not clobber:
+            if not args.clobber:
                 sys.stderr.write(f'{ofile} exists and has mtime greater than {ifile}, skipping. Use --clobber to override\n')
                 continue
-        print(f'{ifile} -> {ofile}')
+        print(f'{ifile} ->  {ofile}')
 
-        det = re.search('hrc([is])[0-2][cm]', ofile).groups()[0]
+        regex = 'hrc([is])[0-2][cm]'
+        match = re.search(regex, ofile)
+        if match := re.search(regex, ofile):
+            det = match.groups()[0]
+        else:
+            raise ValueError(f'{ofile=} does not match {regex=}')
 
-        if (ds9):
-            if noexec:
-                sys.stderr.write("would run HRCDose.fits2png_ds9(ifile, ofile, det), but --noexec called\n")
-            else:
-                HRCDose.fits2png_ds9(ifile, ofile, det)
-        if (matplotlib):
-            if noexec:
-                sys.stderr.write("would run HRCDose.fits2png_matplotlib(ifile, ofile), but --noexec called\n")
-            else:
-                HRCDose.fits2png_matplotlib(ifile, ofile)
-        if (fitspng):
-            if noexec:
-                sys.stderr.write("would run HRCDose.fits2png_fitspng(ifile, ofile), but --noexec called\n")
-            else:
-                HRCDose.fits2png_fitspng(ifile, ofile)
+        pngargs = [ifile, ofile]
+
+        if args.use == 'ds9':
+            pngargs.append(det)
+
+        use = { 'ds9':HRCDose.fits2png_ds9,
+                'matplotlib':HRCDose.fits2png_matplotlib,
+                'fitspng':HRCDose.fits2png_fitspng
+               }
+
+        usestr = { 'ds9':'HRCDose.fits2png_ds9',
+                'matplotlib':'HRCDose.fits2png_matplotlib',
+                'fitspng':'HRCDose.fits2png_fitspng'
+               }
+
+        if args.noexec:
+                sys.stderr.write(f'would run {usestr[args.use]}({pngargs}), but --noexec called\n')
+        else:
+            use[args.use](*pngargs)
+
         sys.stderr.flush()
 
 def main():
@@ -57,13 +68,12 @@ def main():
     parser.add_argument('-y', '--year', default='[0-9]'*4, help='Year.')
     parser.add_argument('-m', '--month', default='[0-9]'*2, help='Month.')
     parser.add_argument('-n', '--noexec', action='store_true', help='Do not actually do anything.')
-    parser.add_argument('--ds9', action='store_true')
-    parser.add_argument('--matplotlib', action='store_true')
-    parser.add_argument('--fitspng', action='store_true')
+    parser.add_argument('--use', choices=('ds9', 'matplotlib', 'fitspng'), default='ds9')
     parser.add_argument('--clobber', action='store_true', help='Overwrite even if outfile already exists and has mtime later than infile.')
 
     args = parser.parse_args()
-    mk_png(args.indir, args.outdir, args.det, args.subdet, args.type, args.year, args.month, args.ds9, args.matplotlib, args.fitspng, args.clobber, args.noexec)
+
+    mk_png(args)
 
 if __name__ == '__main__':
     main()
