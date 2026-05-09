@@ -80,7 +80,7 @@ def fits2png_fitspng(infile, outfile):
     subprocess.run(['mogrify', '-rotate', '270', outfile])
 
 def fits2png_ds9(infile, outfile, det):
-    detopts = { 's':['-geometry', '1024x512', '-rotate', '90'], 'i':['-geometry', '1024x1024', '-rotate', '135', '-colorbar', 'vertical'] }
+    detopts = { 's':['-geometry', '1024x512', '-rotate', '90'], 'i':['-geometry', '1024x1024', '-rotate', '-135', '-colorbar', 'vertical'] }
     ds9_args = (['ds9',
                  infile,
                  *detopts[det],
