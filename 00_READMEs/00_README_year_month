@@ -1,7 +1,5 @@
 #! /bin/bash
 
-set -eo pipefail
-
 #
 # Generates dosage map for the specified year/month.
 #
@@ -10,13 +8,11 @@ set -eo pipefail
 # directories.
 #
 
-basedir=./outdir
-false && {
-    rm -rf test
-    mkdir -p test/cumulative
-    cp -a outdir/{stats,png,monthly} ./test
-    cp -a ./outdir/cumulative/*2024-03* ./test/cumulative
-}
+set -eo pipefail
+
+SCRIPTDIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+
+basedir=/data/hrc/DoseMaps
 
 [ $# -eq 2 -o $# -eq 0 ] || {
     echo "Usage: $0 [year month]" 1>&2
@@ -40,11 +36,24 @@ else
     month="$2"
 fi
 
-echo Processing $year $month... 1>&2
+datestr=$(printf %4d-%02d $year $month)
+
+# to test recreating already-completed maps
+false && {
+    rm -f "$basedir"/{monthly,cumulative}/*${datestr}*
+    #cp -a /data/hrc/DoseMaps/stats/* /data/hrc/bak
+    for f in "$basedir"/stats/*
+    do
+	head -n -1 $f > $f.tmp
+	mv $f.tmp $f
+    done
+}
+
+echo Processing ${datestr}... >&2
 
 # Ensure requested year/month cumulative map doesn't already exist
-[ -f "$basedir"/cumulative/hrci0c_${year}-$(printf %02d $month).fits.gz ] && {
-    echo "'$basedir/cumulative/hrci0c_${year}-$(printf %02d $month).fits.gz' already exists" 1>&2
+[ -f "$basedir"/cumulative/hrci0c_${datestr}.fits.gz ] && {
+    echo "'$basedir/cumulative/hrci0c_${datestr}.fits.gz' already exists" >&2
     exit 1
 }
 
@@ -53,21 +62,20 @@ lmonth=$(( month-1 ))
 lyear=$year
 [ $lmonth -eq 0 ] && { lmonth=12; (( lyear-- )); }
 
-[ -f "$basedir"/cumulative/hrci0c_${lyear}-$(printf %02d $lmonth).fits.gz ] || {
-    echo "'$basedir/cumulative/hrci0c_${lyear}-$(printf %02d $lmonth).fits.gz' doesn't exist" 1>&2
+ldatestr=$(printf %4d-%02d $lyear $lmonth)
+[ -f "$basedir"/cumulative/hrci0c_${ldatestr}.fits.gz ] || {
+    echo "'$basedir/cumulative/hrci0c_${ldatestr}.fits.gz' doesn't exist" >&2
     exit 1
 }
 
-datestr=$(printf %4d-%02d $year $month)
-
 . ~/python3_venv/bin/activate
 
-echo "Generating monthly maps for $datestr" 1>&2
-python3 ./src/dosemaps_monthly.py $year $month "$basedir"/monthly
+echo "Generating monthly maps for $datestr" >&2
+python3 "$SCRIPTDIR"/../src/dosemaps_monthly.py $year $month "$basedir"/monthly
 
 echo "Calculating statistics for HRC-I maps" 1>&2
 det=i; subdet=0
-python3 ./src/mk_stats.py \
+python3 "$SCRIPTDIR"/../src/mk_stats.py \
 	-c "$basedir"/cumulative \
 	"$basedir"/monthly \
 	"$basedir"/stats \
@@ -76,28 +84,28 @@ det=s
 for subdet in {0..2}
 do
     detstr=HRC-S$((subdet+1))
-    echo "Calculating statistics for $detstr maps" 1>&2
-    python3 ./src/mk_stats.py \
+    echo "Calculating statistics for $detstr maps" >&2
+    python3 "$SCRIPTDIR"/../src/mk_stats.py \
 	    -c "$basedir"/cumulative \
 	    "$basedir"/monthly \
 	    "$basedir"/stats \
 	    $det $subdet
 done
 
-echo "Generating cumulative maps for $datestr" 1>&2
-python3 ./src/dosemaps_cumulative.py \
+echo "Generating cumulative maps for $datestr" >&2
+python3 "$SCRIPTDIR"/../src/dosemaps_cumulative.py \
 	-y $year -m $month \
 	"$basedir"/monthly \
 	"$basedir"/cumulative
 
-echo "
-Next, generate PNG files and copy them to $basedir (e.g., run the
-following commands on remote machine)
+# must be run on a machine with Xvfb, legs has sshfs /home/rpete/hrc ascda3:/data/hrc
+echo "Generating PNG images" >&2
+ssh legs /data/legs/rpete/flight/hrc_dosage_map/00_READMEs/04_README_png
 
-rsync -avn --delete localhost:$(pwd)/$basedir/{monthly,cumulative} $basedir
-/bin/bash ./00_READMEs/04_README_png $basedir
-rsync -avn --delete $basedir/png localhost:$(pwd)/$basedir
-" 1>&2
+pngdir="$basedir"/png
 
-echo "Generating HTML" 1>&2
-/bin/bash ./00_READMEs/05_README_html "$basedir"
+echo "Generating HTML" >&2
+/bin/bash "$SCRIPTDIR"/05_README_html "$basedir"
+
+echo "Updating links in /data/hrc/[is]/DoseMaps" >&2
+/bin/bash "$SCRIPTDIR"/06_README_data_hrc_links

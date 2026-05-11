@@ -358,11 +358,16 @@ def main():
     parser = argparse.ArgumentParser(
         description='Create HTML pages from HRC dosage maps.'
     )
-    parser.add_argument('--template_dir', default='./html', help='Directory containing HTML templates.')
+    parser.add_argument('--template_dir', help='Directory containing HTML templates.')
     parser.add_argument('sdir', help='Stats directory.')
     parser.add_argument('pdir', help='PNG directory.')
     parser.add_argument('outdir', help='Output directory.')
     args = parser.parse_args()
+
+    if args.template_dir is None:
+        srcdir = os.path.dirname(__file__)
+        args.template_dir = f'{srcdir}/../html'
+        
     mk_html(args.sdir, args.pdir, args.template_dir, args.outdir)
 
 if __name__ == '__main__':

@@ -1,18 +1,20 @@
 #! /bin/bash
 
+set -eo pipefail
+
+SCRIPTDIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+
 false && {
-  echo 'This script recreates the HTML files.' 1>&2
+  echo 'This script recreates the HTML files.' >&2
   exit
 }
 
-set -eo pipefail
-
 [ $# -lt 2 ] || {
-    echo "Usage: $0 [basedir]" 1>&2
+    echo "Usage: $0 [basedir]" >&2
     exit 1
 }
 
-basedir=./outdir
+basedir=/data/hrc/DoseMaps
 [ $# -eq 1 ] && basedir="$1"
 
 . ~/python3_venv/bin/activate
@@ -24,17 +26,10 @@ pdir="$basedir"/html/Plots
 
 rm -rf $outdir
 mkdir -p $outdir
-cp -a ./html/Plots $outdir
-ln -s ../../$pngdir $outdir/Image
-python3 ./src/mk_plots.py $sdir $pdir
-python3 ./src/mk_html.py $sdir $pngdir $outdir
+cp -a "$SCRIPTDIR"/../html/Plots $outdir
+ln -s "$pngdir" $outdir/Image
+python3 "$SCRIPTDIR"/../src/mk_plots.py $sdir $pdir
+python3 "$SCRIPTDIR"/../src/mk_html.py $sdir $pngdir $outdir
 
-echo "
-Finally, copy the HTML files to /data/wdocs
-
-  rsync -avzn --delete $outdir/ /data/wdocs/rpete/HRC_Dosage --exclude Image
-  rsync -avn --delete $pngdir/ /data/wdocs/rpete/HRC_Dosage/Image
-" 1>&2
-
-#echo "rsync -e 'ssh -p 1235' -avzn --delete $outdir/ localhost:/data/wdocs/rpete/HRC_Dosage --exclude Image | less"
-#echo "rsync -e 'ssh -p 1235' -avn --delete $pngdir/ localhost:/data/wdocs/rpete/HRC_Dosage/Image | less"
+rsync -az --delete $outdir/ /data/wdocs/rpete/HRC_Dosage --exclude Image
+rsync -a --delete $pngdir/ /data/wdocs/rpete/HRC_Dosage/Image --exclude bak

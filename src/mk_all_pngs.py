@@ -23,6 +23,7 @@ def mk_png(args):
 
         if os.path.isfile(ofile) and os.path.getmtime(ifile) < os.path.getmtime(ofile):
             if not args.clobber:
+                continue
                 sys.stderr.write(f'{ofile} exists and has mtime greater than {ifile}, skipping. Use --clobber to override\n')
                 continue
         if args.filenames:

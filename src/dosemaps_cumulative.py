@@ -101,12 +101,8 @@ def main():
     parser.add_argument('-c', '--check', action='store_true', help='\
 Check for the existence of any missing monthly dosage maps without \
 doing anything else.')
-    parser.add_argument('-d', '--det', choices=['i', 's'], help='\
-Only calculate cumulative map for the given detector. Must be used \
-in conjunction with -i.')
-    parser.add_argument('-s', '--subdet', type=int, choices=range(3), help='\
-Only calculate cumulative map for the given subdetector region. Must \
-be used in conjunction with --det.')
+    parser.add_argument('-d', '--det', choices=('i','s'), help='Only calculate cumulative map for the given detector.')
+    parser.add_argument('-s', '--subdet', type=int, choices=range(3), help='Only calculate cumulative map for the given subdetector region.')
     parser.add_argument('-y', '--year', type=int, help='Process only the specified year and month.')
     parser.add_argument('-m', '--month', type=int, help='Process only the specified year and month.')
     parser.add_argument('indir', help='Input directory.')

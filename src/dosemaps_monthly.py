@@ -6,7 +6,11 @@ import sys
 
 import HRCDose
 
-def dosemaps_monthly(year, month, outdir):
+def dosemaps_monthly(args):
+    year = args.year
+    month = args.month
+    outdir = args.outdir
+
     HRCDose.mkdir_p(outdir)
 
     dosemaps = HRCDose.mk_zero_dosemaps()
@@ -73,7 +77,8 @@ def main():
     parser.add_argument('month', type=int)
     parser.add_argument('outdir', help='Output directory.')
     args = parser.parse_args()
-    dosemaps_monthly(args.year, args.month, args.outdir)
+
+    dosemaps_monthly(args)
 
 if __name__ == '__main__':
     main()

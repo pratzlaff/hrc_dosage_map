@@ -1,19 +1,22 @@
 #! /bin/bash
 
+set -eo pipefail
+
 false && {
-  echo 'This script recreates the PNG files.' 1>&2
+  echo 'This script recreates the PNG files.' >&2
   exit
 }
 
-set -eo pipefail
-
 [ $# -lt 2 ] || {
-    echo "Usage: $0 [basedir]" 1>&2
+    echo "Usage: $0 [outdir]" >&2
     exit 1
 }
 
-basedir=./outdir
-[ $# -eq 1 ] && basedir="$1"
+SCRIPTDIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+
+basedir=/home/rpete/hrc/DoseMaps
+outdir="$basedir"/png
+[ $# -eq 1 ] && outdir="$1"
 
 declare -A indirs
 
@@ -21,26 +24,27 @@ indirs=(
     [c]="$basedir"/cumulative
     [m]="$basedir"/monthly
 )
-outdir="$basedir"/png
 
 . ~/.bash_aliases
 shopt -s expand_aliases
 
+ciao
 . ~/python3_venv/bin/activate
 
+killall Xvfb || :
 Xvfb :101 -screen 0 2560x1440x24 1>/dev/null 2>&1 &
 
 for type in m c
 do
-    indir=${indirs[$type]}
-    time DISPLAY=:101 python3 src/mk_all_pngs.py $indir $outdir
+    indir="${indirs[$type]}"
+    time DISPLAY=:101 python3 "$SCRIPTDIR"/../src/mk_all_pngs.py $indir $outdir
 
     # I've been unable to successfully run multiple simultaneously ds9
     # processes, even using -title, but this is one way it might have
     # been done
 
     # python3 src/mk_all_pngs.py $indir $outdir --filename 2>/dev/null |\
-    # 	time env DISPLAY=:101 parallel -j 16 --colsep ' ' python3 ./src/mk_one_png.py {1} {2} {%}
+    #     time env DISPLAY=:101 parallel -j 16 --colsep ' ' python3 ./src/mk_one_png.py {1} {2} {%}
 
 done
 

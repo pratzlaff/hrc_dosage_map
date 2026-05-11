@@ -8,6 +8,7 @@ import pprint
 import re
 import shutil
 import subprocess
+import sys
 
 subraw = {
     's' : { 'x':[ [0]*3, [4095]*3 ],
@@ -91,7 +92,7 @@ def fits2png_ds9(infile, outfile, det):
                  '-colorbar', 'numerics', 'yes',
                  '-saveimage', 'png', outfile,
                  '-exit'])
-    #print(' '.join(ds9_args))
+    #sys.stderr.write(' '.join(ds9_args)+'\n')
     subprocess.run(ds9_args)
 
 def fits_read_raw(fname):

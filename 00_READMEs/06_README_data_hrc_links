@@ -1,0 +1,64 @@
+#! /bin/bash
+
+set -eo pipefail
+
+for d in /data/hrc/i/DoseMaps/{,png}/{monthly,cumulative} /data/hrc/s/DoseMaps/{,png}/{monthly,cumulative}/S{1,2,3}
+do
+    mkdir -p $d
+    chown rpete.cal $d
+    chmod g+s $d
+done
+
+for ln_targ in /data/hrc/DoseMaps/monthly/hrci0m*
+do
+    ln_name=/data/hrc/i/DoseMaps/monthly/$(basename "$ln_targ")
+    [ -f "$ln_name" ] || ln -s "$ln_targ" "$ln_name"
+done
+
+for ln_targ in /data/hrc/DoseMaps/png/hrci0m*
+do
+    ln_name=/data/hrc/i/DoseMaps/png/monthly/$(basename "$ln_targ")
+    [ -f "$ln_name" ] || ln -s "$ln_targ" "$ln_name"
+done
+
+for ln_targ in /data/hrc/DoseMaps/cumulative/hrci0c*
+do
+    ln_name=/data/hrc/i/DoseMaps/cumulative/$(basename "$ln_targ")
+    [ -f "$ln_name" ] || ln -s "$ln_targ" "$ln_name"
+done
+
+for ln_targ in /data/hrc/DoseMaps/png/hrci0c*
+do
+    ln_name=/data/hrc/i/DoseMaps/png/cumulative/$(basename "$ln_targ")
+    [ -f "$ln_name" ] || ln -s "$ln_targ" "$ln_name"
+done
+
+for i in 0 1 2
+do
+    I=$(( i+1 ))
+
+    for ln_targ in /data/hrc/DoseMaps/monthly/hrcs${i}m*
+    do
+	ln_name=/data/hrc/s/DoseMaps/monthly/S${I}/$(basename "$ln_targ")
+	[ -f "$ln_name" ] || ln -s "$ln_targ" "$ln_name"
+    done
+
+    for ln_targ in /data/hrc/DoseMaps/cumulative/hrcs${i}c*
+    do
+	ln_name=/data/hrc/s/DoseMaps/cumulative/S${I}/$(basename "$ln_targ")
+	[ -f "$ln_name" ] || ln -s "$ln_targ" "$ln_name"
+    done
+
+    for ln_targ in /data/hrc/DoseMaps/png/hrcs${i}m*
+    do
+	ln_name=/data/hrc/s/DoseMaps/png/monthly/S${I}/$(basename "$ln_targ")
+	[ -f "$ln_name" ] || ln -s "$ln_targ" "$ln_name"
+    done
+
+    for ln_targ in /data/hrc/DoseMaps/png/hrcs${i}c*
+    do
+	ln_name=/data/hrc/s/DoseMaps/png/cumulative/S${I}/$(basename "$ln_targ")
+	[ -f "$ln_name" ] || ln -s "$ln_targ" "$ln_name"
+    done
+
+done
