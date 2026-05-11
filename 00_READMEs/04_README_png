@@ -14,7 +14,7 @@ false && {
 
 SCRIPTDIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 
-basedir=/home/rpete/hrc/DoseMaps
+basedir=/data/hrc/DoseMaps
 outdir="$basedir"/png
 [ $# -eq 1 ] && outdir="$1"
 

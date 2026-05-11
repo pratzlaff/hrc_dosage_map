@@ -32,4 +32,4 @@ python3 "$SCRIPTDIR"/../src/mk_plots.py $sdir $pdir
 python3 "$SCRIPTDIR"/../src/mk_html.py $sdir $pngdir $outdir
 
 rsync -az --delete $outdir/ /data/wdocs/rpete/HRC_Dosage --exclude Image
-rsync -a --delete $pngdir/ /data/wdocs/rpete/HRC_Dosage/Image --exclude bak
+rsync -a --delete $pngdir/ /data/wdocs/rpete/HRC_Dosage/Image

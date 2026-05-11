@@ -98,9 +98,9 @@ python3 "$SCRIPTDIR"/../src/dosemaps_cumulative.py \
 	"$basedir"/monthly \
 	"$basedir"/cumulative
 
-# must be run on a machine with Xvfb, legs has sshfs /home/rpete/hrc ascda3:/data/hrc
+# must be run on a machine with Xvfb
 echo "Generating PNG images" >&2
-ssh legs /data/legs/rpete/flight/hrc_dosage_map/00_READMEs/04_README_png
+/data/legs/rpete/flight/hrc_dosage_map/00_READMEs/04_README_png
 
 pngdir="$basedir"/png
 
