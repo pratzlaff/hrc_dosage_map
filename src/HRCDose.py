@@ -315,6 +315,7 @@ def year_month_obsids_ocat(year, month):
     return obsids[mask]
 
 def year_month_obsids_archive(year, month):
+    return year_month_obsids_archive_ocat(year, month)
     nyear = year
     nmonth = month+1
     if (nmonth > 12):
@@ -336,10 +337,30 @@ go
         stdout=subprocess.PIPE,
     )
     output = p.communicate(input=input.encode())[0].decode()
-    try:
-        return np.array([int(o) for o in re.findall(r'hrcf(\d{5})_.*evt1.fits', output)])
-    except:
-        raise Exception(f'no obsids found for {year}-{month:02d}')
+    return np.sort(np.array([int(o) for o in re.findall(r'hrcf(\d{5})_.*evt1.fits', output)]))
+
+def year_month_obsids_archive_ocat(year, month):
+    nyear = year
+    nmonth = month+1
+    if (nmonth > 12):
+        nmonth = 1
+        nyear += 1
+    args = ['/proj/axaf/bin/cxc-query-ocat',
+            '--start_date',
+            f'{year:04d}-{month:02d}-01/{nyear:04d}-{nmonth:02d}-01',
+            '--instrument=hrc',
+            '--status=archived,observed',
+            '--columns=obsid',
+            ]
+    p = subprocess.Popen(
+        args,
+        stdin=subprocess.PIPE,
+        stdout=subprocess.PIPE,
+    )
+    from io import StringIO
+    output = p.communicate()[0].decode()
+    obsids = np.loadtxt(StringIO(output), unpack=True, skiprows=2, dtype=int, ndmin=1)
+    return np.sort(obsids)
 
 def retrieve_archived_evt1(obsid):
     input = f'''
