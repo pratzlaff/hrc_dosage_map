@@ -5,7 +5,7 @@ set -eo pipefail
 for d in /data/hrc/i/DoseMaps/{,png}/{monthly,cumulative} /data/hrc/s/DoseMaps/{,png}/{monthly,cumulative}/S{1,2,3}
 do
     mkdir -p $d
-    chown rpete.hat $d
+    chown rpete.cal $d
     chmod g+s $d
 done
 

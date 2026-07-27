@@ -31,7 +31,7 @@ shopt -s expand_aliases
 ciao
 . ~/python3_venv/bin/activate
 
-killall Xvfb 1>/dev/null 2>&1 || :
+killall Xvfb || :
 Xvfb :101 -screen 0 2560x1440x24 1>/dev/null 2>&1 &
 
 for type in m c
