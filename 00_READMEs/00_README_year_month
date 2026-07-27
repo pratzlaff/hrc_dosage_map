@@ -24,7 +24,6 @@ if [ $# -eq 0 ]
 then
     read year month <<<$(date +'%Y %m')
     month=$((10#$month))
-    echo $year $month
     ((month--))
     if [ $month -eq 0 ]
     then
