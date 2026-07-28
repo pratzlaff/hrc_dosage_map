@@ -52,7 +52,15 @@ def total_valid_shield_dosage(args):
         for k in counts_o:
             counts[detnam][k] += counts_o[k]
         
-    print(f"{args.year}-{args.month:02d}\t{counts['HRC-I']['total']}\t{counts['HRC-I']['valid']}\t{counts['HRC-I']['shield']}\t{counts['HRC-S']['total']}\t{counts['HRC-S']['valid']}\t{counts['HRC-S']['shield']}\t")
+    print('\t'.join([str(args.year),
+	      str(args.month),
+	      str(counts['HRC-I']['total']),
+	      str(counts['HRC-I']['valid']),
+	      str(counts['HRC-I']['shield']),
+	      str(counts['HRC-S']['total']),
+	      str(counts['HRC-S']['valid']),
+	      str(counts['HRC-S']['shield'])
+	     ]))
     
 def main():
     parser = argparse.ArgumentParser(
